@@ -7,8 +7,10 @@ import {
   Plus, 
   Settings, 
   User,
-  Rss
+  Rss,
+  List
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   searchQuery: string;
@@ -43,6 +45,13 @@ const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: He
                 className="pl-10 w-64"
               />
             </div>
+            
+            <Link to="/feeds">
+              <Button variant="outline" size="sm" className="gap-2">
+                <List className="h-4 w-4" />
+                Gérer les flux
+              </Button>
+            </Link>
             
             <Button 
               variant="outline" 
