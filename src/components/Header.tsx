@@ -14,9 +14,10 @@ interface HeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   pinnedCount: number;
+  onAddFeedClick: () => void;
 }
 
-const Header = ({ searchQuery, onSearchChange, pinnedCount }: HeaderProps) => {
+const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: HeaderProps) => {
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -43,7 +44,12 @@ const Header = ({ searchQuery, onSearchChange, pinnedCount }: HeaderProps) => {
               />
             </div>
             
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2"
+              onClick={onAddFeedClick}
+            >
               <Plus className="h-4 w-4" />
               Ajouter un Flux
             </Button>

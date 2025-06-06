@@ -5,6 +5,7 @@ import { NewsItem } from '@/types/news';
 import Header from '@/components/Header';
 import CategoryFilter from '@/components/CategoryFilter';
 import NewsCard from '@/components/NewsCard';
+import AddFeedModal from '@/components/AddFeedModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Filter } from 'lucide-react';
@@ -15,6 +16,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
+  const [isAddFeedModalOpen, setIsAddFeedModalOpen] = useState(false);
 
   const filteredNews = useMemo(() => {
     let filtered = news;
@@ -67,12 +69,21 @@ const Index = () => {
     toast.success("Flux actualisés");
   };
 
+  const handleAddFeed = (feedData: any) => {
+    console.log('Nouveau flux ajouté:', feedData);
+    toast.success(`Flux "${feedData.name}" ajouté avec succès!`);
+    
+    // Ici vous pourrez ajouter la logique pour envoyer les données à votre backend MySQL
+    // Par exemple: await api.addFeed(feedData);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         pinnedCount={pinnedCount}
+        onAddFeedClick={() => setIsAddFeedModalOpen(true)}
       />
       
       <main className="container mx-auto px-4 py-6">
@@ -166,6 +177,13 @@ const Index = () => {
           </div>
         </div>
       </main>
+
+      <AddFeedModal 
+        isOpen={isAddFeedModalOpen}
+        onClose={() => setIsAddFeedModalOpen(false)}
+        onAddFeed={handleAddFeed}
+        categories={categories}
+      />
     </div>
   );
 };
