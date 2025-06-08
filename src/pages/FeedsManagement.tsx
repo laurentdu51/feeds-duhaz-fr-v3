@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
-import { mockFeeds } from '@/data/mockFeeds';
+import { useFeeds } from '@/hooks/useFeeds';
+import { useAuth } from '@/hooks/useAuth';
 import { Feed } from '@/types/feed';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,15 +26,21 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  ArrowLeft
+  ArrowLeft,
+  LogOut
 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 const FeedsManagement = () => {
-  const [feeds, setFeeds] = useState<Feed[]>(mockFeeds);
+  const { feeds, loading, toggleFollow } = useFeeds();
+  const { user, signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  // Redirect to auth if not authenticated
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const getTypeIcon = (type: Feed['type']) => {
     switch (type) {
@@ -62,23 +69,6 @@ const FeedsManagement = () => {
     }
   };
 
-  const handleToggleFollow = (feedId: string) => {
-    setFeeds(prev => prev.map(feed => 
-      feed.id === feedId 
-        ? { ...feed, isFollowed: !feed.isFollowed }
-        : feed
-    ));
-    
-    const feed = feeds.find(f => f.id === feedId);
-    if (feed) {
-      toast.success(
-        feed.isFollowed 
-          ? `Vous ne suivez plus "${feed.name}"` 
-          : `Vous suivez maintenant "${feed.name}"`
-      );
-    }
-  };
-
   const filteredFeeds = feeds.filter(feed => {
     const matchesSearch = feed.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          feed.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -98,20 +88,41 @@ const FeedsManagement = () => {
     { value: 'steam', label: 'Steam', icon: Gamepad2 },
   ];
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Chargement des flux...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Retour
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Retour
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold">Gestion des flux</h1>
+                <p className="text-muted-foreground">Gérez vos flux RSS et sources d'actualités</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{user.email}</span>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                Déconnexion
               </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold">Gestion des flux</h1>
-              <p className="text-muted-foreground">Gérez vos flux RSS et sources d'actualités</p>
             </div>
           </div>
         </div>
@@ -276,7 +287,7 @@ const FeedsManagement = () => {
                           <TableCell>
                             <Switch
                               checked={feed.isFollowed}
-                              onCheckedChange={() => handleToggleFollow(feed.id)}
+                              onCheckedChange={() => toggleFollow(feed.id)}
                             />
                           </TableCell>
                         </TableRow>

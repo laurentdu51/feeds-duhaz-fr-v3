@@ -8,9 +8,11 @@ import {
   Settings, 
   User,
   Rss,
-  List
+  List,
+  LogOut
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
   searchQuery: string;
@@ -20,6 +22,12 @@ interface HeaderProps {
 }
 
 const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: HeaderProps) => {
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -46,31 +54,44 @@ const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: He
               />
             </div>
             
-            <Link to="/feeds">
-              <Button variant="outline" size="sm" className="gap-2">
-                <List className="h-4 w-4" />
-                Gérer les flux
-              </Button>
-            </Link>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-2"
-              onClick={onAddFeedClick}
-            >
-              <Plus className="h-4 w-4" />
-              Ajouter un Flux
-            </Button>
-            
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4" />
-            </Button>
-            
-            <Button variant="ghost" size="sm" className="gap-2">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Mon profil</span>
-            </Button>
+            {user ? (
+              <>
+                <Link to="/feeds">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <List className="h-4 w-4" />
+                    Gérer les flux
+                  </Button>
+                </Link>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={onAddFeedClick}
+                >
+                  <Plus className="h-4 w-4" />
+                  Ajouter un Flux
+                </Button>
+                
+                <Button variant="ghost" size="sm">
+                  <Settings className="h-4 w-4" />
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{user.email}</span>
+                  <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button variant="default" size="sm" className="gap-2">
+                  <User className="h-4 w-4" />
+                  Se connecter
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
         
