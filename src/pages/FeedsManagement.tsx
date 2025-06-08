@@ -27,20 +27,16 @@ import {
   CheckCircle,
   Clock,
   ArrowLeft,
-  LogOut
+  LogOut,
+  User
 } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const FeedsManagement = () => {
   const { feeds, loading, toggleFollow } = useFeeds();
   const { user, signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
-
-  // Redirect to auth if not authenticated
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
 
   const getTypeIcon = (type: Feed['type']) => {
     switch (type) {
@@ -114,15 +110,28 @@ const FeedsManagement = () => {
               </Link>
               <div>
                 <h1 className="text-2xl font-bold">Gestion des flux</h1>
-                <p className="text-muted-foreground">Gérez vos flux RSS et sources d'actualités</p>
+                <p className="text-muted-foreground">
+                  {user ? 'Gérez vos flux RSS et sources d\'actualités' : 'Découvrez nos flux RSS disponibles'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{user.email}</span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                Déconnexion
-              </Button>
+              {user ? (
+                <>
+                  <span className="text-sm text-muted-foreground">{user.email}</span>
+                  <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Déconnexion
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="default" size="sm" className="gap-2">
+                    <User className="h-4 w-4" />
+                    Se connecter
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -140,14 +149,16 @@ const FeedsManagement = () => {
                 <div className="text-2xl font-bold">{feeds.length}</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Suivis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{followedCount}</div>
-              </CardContent>
-            </Card>
+            {user && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Suivis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{followedCount}</div>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Actifs</CardTitle>
@@ -182,10 +193,12 @@ const FeedsManagement = () => {
                     className="pl-10"
                   />
                 </div>
-                <Button variant="outline" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Ajouter un flux
-                </Button>
+                {user && (
+                  <Button variant="outline" className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Ajouter un flux
+                  </Button>
+                )}
               </div>
               
               <div className="flex flex-wrap gap-2">
@@ -215,6 +228,28 @@ const FeedsManagement = () => {
             </CardContent>
           </Card>
 
+          {/* Avertissement pour les visiteurs */}
+          {!user && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="font-medium text-blue-900">Connectez-vous pour plus de fonctionnalités</p>
+                    <p className="text-sm text-blue-700">
+                      Créez un compte pour suivre vos flux préférés et personnaliser votre expérience.
+                    </p>
+                  </div>
+                  <Link to="/auth">
+                    <Button size="sm" className="ml-auto">
+                      Se connecter
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Liste des flux */}
           <Card>
             <CardHeader>
@@ -233,7 +268,7 @@ const FeedsManagement = () => {
                       <TableHead>Statut</TableHead>
                       <TableHead>Articles</TableHead>
                       <TableHead>Dernière MAJ</TableHead>
-                      <TableHead>Suivi</TableHead>
+                      {user && <TableHead>Suivi</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -284,12 +319,14 @@ const FeedsManagement = () => {
                               })}
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <Switch
-                              checked={feed.isFollowed}
-                              onCheckedChange={() => toggleFollow(feed.id)}
-                            />
-                          </TableCell>
+                          {user && (
+                            <TableCell>
+                              <Switch
+                                checked={feed.isFollowed}
+                                onCheckedChange={() => toggleFollow(feed.id)}
+                              />
+                            </TableCell>
+                          )}
                         </TableRow>
                       );
                     })}
