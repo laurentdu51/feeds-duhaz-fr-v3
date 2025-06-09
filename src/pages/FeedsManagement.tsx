@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import { useFeeds } from '@/hooks/useFeeds';
+import { useFeedUpdate } from '@/hooks/useFeedUpdate';
 import { useAuth } from '@/hooks/useAuth';
 import { Feed } from '@/types/feed';
 import { Button } from '@/components/ui/button';
@@ -28,15 +28,27 @@ import {
   Clock,
   ArrowLeft,
   LogOut,
-  User
+  User,
+  RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const FeedsManagement = () => {
-  const { feeds, loading, toggleFollow } = useFeeds();
+  const { feeds, loading, toggleFollow, refetch } = useFeeds();
+  const { updateFeed, updating } = useFeedUpdate();
   const { user, signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  const handleUpdateFeed = async (feed: Feed) => {
+    try {
+      await updateFeed(feed.id, feed.url);
+      // Refetch feeds to get updated data
+      await refetch();
+    } catch (error) {
+      // Error already handled in useFeedUpdate
+    }
+  };
 
   const getTypeIcon = (type: Feed['type']) => {
     switch (type) {
@@ -250,7 +262,7 @@ const FeedsManagement = () => {
             </Card>
           )}
 
-          {/* Liste des flux */}
+          {/* Liste des flux avec colonne Actions */}
           <Card>
             <CardHeader>
               <CardTitle>Flux disponibles</CardTitle>
@@ -269,6 +281,7 @@ const FeedsManagement = () => {
                       <TableHead>Articles</TableHead>
                       <TableHead>Dernière MAJ</TableHead>
                       {user && <TableHead>Suivi</TableHead>}
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -327,6 +340,18 @@ const FeedsManagement = () => {
                               />
                             </TableCell>
                           )}
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleUpdateFeed(feed)}
+                              disabled={updating === feed.id}
+                              className="gap-2"
+                            >
+                              <RefreshCw className={`h-4 w-4 ${updating === feed.id ? 'animate-spin' : ''}`} />
+                              {updating === feed.id ? 'Mise à jour...' : 'Actualiser'}
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
