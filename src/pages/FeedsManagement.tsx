@@ -32,6 +32,9 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import AddFeedModal from '@/components/AddFeedModal';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const FeedsManagement = () => {
   const { feeds, loading, toggleFollow, refetch } = useFeeds();
@@ -39,6 +42,7 @@ const FeedsManagement = () => {
   const { user, signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [isAddFeedModalOpen, setIsAddFeedModalOpen] = useState(false);
 
   const handleUpdateFeed = async (feed: Feed) => {
     try {
@@ -47,6 +51,40 @@ const FeedsManagement = () => {
       await refetch();
     } catch (error) {
       // Error already handled in useFeedUpdate
+    }
+  };
+
+  const handleAddFeed = async (feedData: any) => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour ajouter un flux');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('feeds')
+        .insert({
+          name: feedData.name,
+          url: feedData.url,
+          type: feedData.type,
+          description: feedData.description || null,
+          category: feedData.category || 'general',
+          status: 'pending'
+        });
+
+      if (error) {
+        console.error('Error adding feed:', error);
+        toast.error('Erreur lors de l\'ajout du flux');
+        return;
+      }
+
+      toast.success('Flux ajouté avec succès');
+      setIsAddFeedModalOpen(false);
+      // Refetch feeds to show the new one
+      await refetch();
+    } catch (error) {
+      console.error('Error adding feed:', error);
+      toast.error('Erreur lors de l\'ajout du flux');
     }
   };
 
@@ -206,7 +244,11 @@ const FeedsManagement = () => {
                   />
                 </div>
                 {user && (
-                  <Button variant="outline" className="gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={() => setIsAddFeedModalOpen(true)}
+                  >
                     <Plus className="h-4 w-4" />
                     Ajouter un flux
                   </Button>
@@ -362,6 +404,14 @@ const FeedsManagement = () => {
           </Card>
         </div>
       </main>
+
+      {/* Add Feed Modal */}
+      <AddFeedModal
+        isOpen={isAddFeedModalOpen}
+        onClose={() => setIsAddFeedModalOpen(false)}
+        onAddFeed={handleAddFeed}
+        categories={[]} // Pas besoin de catégories pour l'instant
+      />
     </div>
   );
 };
