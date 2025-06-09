@@ -9,10 +9,12 @@ import {
   User,
   Rss,
   List,
-  LogOut
+  LogOut,
+  Shield
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useSuperUser } from '@/hooks/useSuperUser';
 
 interface HeaderProps {
   searchQuery: string;
@@ -23,6 +25,7 @@ interface HeaderProps {
 
 const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: HeaderProps) => {
   const { user, signOut } = useAuth();
+  const { isSuperUser } = useSuperUser();
 
   const handleSignOut = async () => {
     await signOut();
@@ -36,6 +39,12 @@ const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: He
             <div className="flex items-center gap-2">
               <Rss className="h-6 w-6 text-primary" />
               <h1 className="text-xl font-bold">Feeds.Duhaz.fr</h1>
+              {isSuperUser && (
+                <Badge variant="destructive" className="gap-1">
+                  <Shield className="h-3 w-3" />
+                  Admin
+                </Badge>
+              )}
             </div>
             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
               <span>•</span>
