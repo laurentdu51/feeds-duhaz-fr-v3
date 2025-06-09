@@ -1,70 +1,57 @@
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Plus, 
-  Settings, 
-  User,
-  Rss,
-  List,
-  LogOut,
-  Shield
-} from 'lucide-react';
+import { Search, Plus, Settings, User, Rss, List, LogOut, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSuperUser } from '@/hooks/useSuperUser';
-
 interface HeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   pinnedCount: number;
   onAddFeedClick: () => void;
 }
-
-const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: HeaderProps) => {
-  const { user, signOut } = useAuth();
-  const { isSuperUser } = useSuperUser();
-
+const Header = ({
+  searchQuery,
+  onSearchChange,
+  pinnedCount,
+  onAddFeedClick
+}: HeaderProps) => {
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    isSuperUser
+  } = useSuperUser();
   const handleSignOut = async () => {
     await signOut();
   };
-
-  return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+  return <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <Rss className="h-6 w-6 text-primary" />
               <h1 className="text-xl font-bold">Feeds.Duhaz.fr</h1>
-              {isSuperUser && (
-                <Badge variant="destructive" className="gap-1">
+              {isSuperUser && <Badge variant="destructive" className="gap-1">
                   <Shield className="h-3 w-3" />
                   Admin
-                </Badge>
-              )}
+                </Badge>}
             </div>
             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
               <span>•</span>
-              <span>Liste des flux rss surveillé</span>
+              
             </div>
           </div>
           
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 w-64"
-              />
+              <Input placeholder="Rechercher..." value={searchQuery} onChange={e => onSearchChange(e.target.value)} className="pl-10 w-64" />
             </div>
             
-            {user ? (
-              <>
+            {user ? <>
                 <Link to="/feeds">
                   <Button variant="outline" size="sm" className="gap-2">
                     <List className="h-4 w-4" />
@@ -72,12 +59,7 @@ const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: He
                   </Button>
                 </Link>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={onAddFeedClick}
-                >
+                <Button variant="outline" size="sm" className="gap-2" onClick={onAddFeedClick}>
                   <Plus className="h-4 w-4" />
                   Ajouter un Flux
                 </Button>
@@ -92,15 +74,12 @@ const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: He
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </div>
-              </>
-            ) : (
-              <Link to="/auth">
+              </> : <Link to="/auth">
                 <Button variant="default" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
                   Se connecter
                 </Button>
-              </Link>
-            )}
+              </Link>}
           </div>
         </div>
         
@@ -113,8 +92,6 @@ const Header = ({ searchQuery, onSearchChange, pinnedCount, onAddFeedClick }: He
           </div>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
