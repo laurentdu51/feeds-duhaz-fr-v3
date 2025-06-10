@@ -1,4 +1,3 @@
-
 import { NewsItem } from '@/types/news';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -130,7 +129,11 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete, onOpenArticle }: 
                   e.stopPropagation();
                   onMarkAsRead(news.id);
                 }}
-                className="gap-1"
+                disabled={!user}
+                className={cn(
+                  "gap-1",
+                  !user && "opacity-50 cursor-not-allowed"
+                )}
               >
                 <Eye className="h-3 w-3" />
                 Marquer lu
