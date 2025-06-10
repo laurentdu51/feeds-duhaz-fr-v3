@@ -11,6 +11,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 interface NewsCardProps {
   news: NewsItem;
@@ -21,6 +22,8 @@ interface NewsCardProps {
 }
 
 const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete, onOpenArticle }: NewsCardProps) => {
+  const { user } = useAuth();
+  
   const getSourceColor = (category: string) => {
     switch (category) {
       case 'rss': return 'bg-blue-500/10 text-blue-700 border-blue-200';
@@ -74,9 +77,11 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete, onOpenArticle }: 
                 e.stopPropagation();
                 onTogglePin(news.id);
               }}
+              disabled={!user}
               className={cn(
                 "h-8 w-8 p-0",
-                news.isPinned && "text-yellow-600"
+                news.isPinned && "text-yellow-600",
+                !user && "opacity-50 cursor-not-allowed"
               )}
             >
               <Pin className={cn("h-4 w-4", news.isPinned && "fill-current")} />
@@ -89,7 +94,11 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete, onOpenArticle }: 
                 e.stopPropagation();
                 onDelete(news.id);
               }}
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+              disabled={!user}
+              className={cn(
+                "h-8 w-8 p-0 text-muted-foreground hover:text-destructive",
+                !user && "opacity-50 cursor-not-allowed"
+              )}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
