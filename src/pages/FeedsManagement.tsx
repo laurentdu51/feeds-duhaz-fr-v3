@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useFeeds } from '@/hooks/useFeeds';
 import { useFeedUpdate } from '@/hooks/useFeedUpdate';
 import { useAuth } from '@/hooks/useAuth';
+import { useSuperUser } from '@/hooks/useSuperUser';
 import { Feed } from '@/types/feed';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,20 +30,26 @@ import {
   ArrowLeft,
   LogOut,
   User,
-  RefreshCw
+  RefreshCw,
+  Edit,
+  XCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AddFeedModal from '@/components/AddFeedModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import EditFeedModal from '@/components/EditFeedModal';
 
 const FeedsManagement = () => {
   const { feeds, loading, toggleFollow, refetch } = useFeeds();
   const { updateFeed, updating } = useFeedUpdate();
   const { user, signOut } = useAuth();
+  const { isSuperUser, loading: superUserLoading } = useSuperUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isAddFeedModalOpen, setIsAddFeedModalOpen] = useState(false);
+  const [isEditFeedModalOpen, setIsEditFeedModalOpen] = useState(false);
+  const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
 
   const handleUpdateFeed = async (feed: Feed) => {
     try {
@@ -85,6 +92,67 @@ const FeedsManagement = () => {
     } catch (error) {
       console.error('Error adding feed:', error);
       toast.error('Erreur lors de l\'ajout du flux');
+    }
+  };
+
+  const handleEditFeed = (feed: Feed) => {
+    setSelectedFeed(feed);
+    setIsEditFeedModalOpen(true);
+  };
+
+  const handleSaveEdit = async (feedData: any) => {
+    if (!isSuperUser || !selectedFeed) return;
+
+    try {
+      const { error } = await supabase
+        .from('feeds')
+        .update({
+          name: feedData.name,
+          url: feedData.url,
+          type: feedData.type,
+          description: feedData.description,
+          category: feedData.category,
+          status: feedData.status
+        })
+        .eq('id', selectedFeed.id);
+
+      if (error) {
+        console.error('Error updating feed:', error);
+        toast.error('Erreur lors de la mise à jour du flux');
+        return;
+      }
+
+      toast.success('Flux mis à jour avec succès');
+      setIsEditFeedModalOpen(false);
+      await refetch();
+    } catch (error) {
+      console.error('Error updating feed:', error);
+      toast.error('Erreur lors de la mise à jour du flux');
+    }
+  };
+
+  const handleToggleStatus = async (feed: Feed) => {
+    if (!isSuperUser) return;
+
+    const newStatus = feed.status === 'active' ? 'pending' : 'active';
+    
+    try {
+      const { error } = await supabase
+        .from('feeds')
+        .update({ status: newStatus })
+        .eq('id', feed.id);
+
+      if (error) {
+        console.error('Error toggling feed status:', error);
+        toast.error('Erreur lors du changement de statut');
+        return;
+      }
+
+      toast.success(`Flux ${newStatus === 'active' ? 'activé' : 'désactivé'} avec succès`);
+      await refetch();
+    } catch (error) {
+      console.error('Error toggling feed status:', error);
+      toast.error('Erreur lors du changement de statut');
     }
   };
 
@@ -138,7 +206,7 @@ const FeedsManagement = () => {
     await signOut();
   };
 
-  if (loading) {
+  if (loading || superUserLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p>Chargement des flux...</p>
@@ -304,6 +372,23 @@ const FeedsManagement = () => {
             </Card>
           )}
 
+          {/* Super admin info */}
+          {user && isSuperUser && (
+            <Card className="border-purple-200 bg-purple-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <p className="font-medium text-purple-900">Mode Super Admin</p>
+                    <p className="text-sm text-purple-700">
+                      Vous disposez des droits d'administration pour modifier et désactiver les flux.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Liste des flux avec colonne Actions */}
           <Card>
             <CardHeader>
@@ -383,16 +468,41 @@ const FeedsManagement = () => {
                             </TableCell>
                           )}
                           <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateFeed(feed)}
-                              disabled={updating === feed.id}
-                              className="gap-2"
-                            >
-                              <RefreshCw className={`h-4 w-4 ${updating === feed.id ? 'animate-spin' : ''}`} />
-                              {updating === feed.id ? 'Mise à jour...' : 'Actualiser'}
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUpdateFeed(feed)}
+                                disabled={updating === feed.id}
+                                className="gap-2"
+                              >
+                                <RefreshCw className={`h-4 w-4 ${updating === feed.id ? 'animate-spin' : ''}`} />
+                                {updating === feed.id ? 'Mise à jour...' : 'Actualiser'}
+                              </Button>
+                              
+                              {user && isSuperUser && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEditFeed(feed)}
+                                    className="gap-2"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                    Modifier
+                                  </Button>
+                                  <Button
+                                    variant={feed.status === 'active' ? 'destructive' : 'default'}
+                                    size="sm"
+                                    onClick={() => handleToggleStatus(feed)}
+                                    className="gap-2"
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                    {feed.status === 'active' ? 'Désactiver' : 'Activer'}
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -412,6 +522,17 @@ const FeedsManagement = () => {
         onAddFeed={handleAddFeed}
         categories={[]} // Pas besoin de catégories pour l'instant
       />
+
+      {/* Edit Feed Modal */}
+      {selectedFeed && (
+        <EditFeedModal
+          isOpen={isEditFeedModalOpen}
+          onClose={() => setIsEditFeedModalOpen(false)}
+          onSave={handleSaveEdit}
+          feed={selectedFeed}
+          feedTypes={feedTypes}
+        />
+      )}
     </div>
   );
 };
