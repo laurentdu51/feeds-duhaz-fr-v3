@@ -45,6 +45,14 @@ const EditFeedModal = ({ isOpen, onClose, onSave, feed, feedTypes }: EditFeedMod
     setStatus(feed.status);
   };
 
+  const handleTypeChange = (value: string) => {
+    setType(value as Feed['type']);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatus(value as Feed['status']);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
@@ -80,7 +88,7 @@ const EditFeedModal = ({ isOpen, onClose, onSave, feed, feedTypes }: EditFeedMod
             </div>
             <div className="grid gap-2">
               <Label htmlFor="type">Type</Label>
-              <Select value={type} onValueChange={setType}>
+              <Select value={type} onValueChange={handleTypeChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un type" />
                 </SelectTrigger>
@@ -116,7 +124,7 @@ const EditFeedModal = ({ isOpen, onClose, onSave, feed, feedTypes }: EditFeedMod
             </div>
             <div className="grid gap-2">
               <Label htmlFor="status">Statut</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un statut" />
                 </SelectTrigger>
