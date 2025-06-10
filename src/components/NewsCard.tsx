@@ -17,9 +17,10 @@ interface NewsCardProps {
   onTogglePin: (id: string) => void;
   onMarkAsRead: (id: string) => void;
   onDelete: (id: string) => void;
+  onOpenArticle: (article: NewsItem) => void;
 }
 
-const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete }: NewsCardProps) => {
+const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete, onOpenArticle }: NewsCardProps) => {
   const getSourceColor = (category: string) => {
     switch (category) {
       case 'rss': return 'bg-blue-500/10 text-blue-700 border-blue-200';
@@ -30,16 +31,23 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete }: NewsCardProps) 
     }
   };
 
+  const handleCardClick = () => {
+    onOpenArticle(news);
+    if (!news.isRead) {
+      onMarkAsRead(news.id);
+    }
+  };
+
   return (
     <Card className={cn(
-      "group hover:shadow-lg transition-all duration-300 border-l-4",
+      "group hover:shadow-lg transition-all duration-300 border-l-4 cursor-pointer",
       news.isPinned && "border-l-yellow-500",
       news.isRead && "opacity-75",
       !news.isRead && "border-l-primary"
     )}>
       <CardHeader className="space-y-3">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 space-y-2" onClick={handleCardClick}>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className={getSourceColor(news.category)}>
                 {news.source}
@@ -62,7 +70,10 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete }: NewsCardProps) 
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onTogglePin(news.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePin(news.id);
+              }}
               className={cn(
                 "h-8 w-8 p-0",
                 news.isPinned && "text-yellow-600"
@@ -74,7 +85,10 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete }: NewsCardProps) 
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onDelete(news.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(news.id);
+              }}
               className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
@@ -83,7 +97,7 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete }: NewsCardProps) 
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4" onClick={handleCardClick}>
         <p className="text-sm text-muted-foreground leading-relaxed">
           {news.description}
         </p>
@@ -103,7 +117,10 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete }: NewsCardProps) 
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onMarkAsRead(news.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMarkAsRead(news.id);
+                }}
                 className="gap-1"
               >
                 <Eye className="h-3 w-3" />
@@ -112,7 +129,15 @@ const NewsCard = ({ news, onTogglePin, onMarkAsRead, onDelete }: NewsCardProps) 
             )}
             
             {news.url && (
-              <Button variant="default" size="sm" className="gap-1">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="gap-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(news.url, '_blank');
+                }}
+              >
                 <ExternalLink className="h-3 w-3" />
                 Lire
               </Button>

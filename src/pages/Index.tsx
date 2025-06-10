@@ -1,12 +1,13 @@
-
 import { useState, useMemo } from 'react';
 import { categories } from '@/data/mockNews';
 import { useArticles } from '@/hooks/useArticles';
 import { useAuth } from '@/hooks/useAuth';
+import { NewsItem } from '@/types/news';
 import Header from '@/components/Header';
 import CategoryFilter from '@/components/CategoryFilter';
 import NewsCard from '@/components/NewsCard';
 import AddFeedModal from '@/components/AddFeedModal';
+import ArticleModal from '@/components/ArticleModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +22,8 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
   const [isAddFeedModalOpen, setIsAddFeedModalOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
+  const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
 
   const filteredNews = useMemo(() => {
     let filtered = articles;
@@ -58,6 +61,16 @@ const Index = () => {
   const handleAddFeed = (feedData: any) => {
     console.log('Nouveau flux ajouté:', feedData);
     toast.success(`Flux "${feedData.name}" ajouté avec succès!`);
+  };
+
+  const handleOpenArticle = (article: NewsItem) => {
+    setSelectedArticle(article);
+    setIsArticleModalOpen(true);
+  };
+
+  const handleCloseArticleModal = () => {
+    setIsArticleModalOpen(false);
+    setSelectedArticle(null);
   };
 
   if (loading) {
@@ -205,6 +218,7 @@ const Index = () => {
                     onTogglePin={togglePin}
                     onMarkAsRead={markAsRead}
                     onDelete={deleteArticle}
+                    onOpenArticle={handleOpenArticle}
                   />
                 ))}
               </div>
@@ -213,6 +227,7 @@ const Index = () => {
         </div>
       </main>
 
+      {/* Modals */}
       {user && (
         <AddFeedModal 
           isOpen={isAddFeedModalOpen}
@@ -221,6 +236,12 @@ const Index = () => {
           categories={categories}
         />
       )}
+
+      <ArticleModal 
+        isOpen={isArticleModalOpen}
+        onClose={handleCloseArticleModal}
+        article={selectedArticle}
+      />
     </div>
   );
 };
