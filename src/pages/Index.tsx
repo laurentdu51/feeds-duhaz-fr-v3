@@ -1,6 +1,7 @@
+
 import { useState, useMemo } from 'react';
 import { categories } from '@/data/mockNews';
-import { useArticles } from '@/hooks/useArticles';
+import { useRealArticles } from '@/hooks/useRealArticles';
 import { useAuth } from '@/hooks/useAuth';
 import { NewsItem } from '@/types/news';
 import Header from '@/components/Header';
@@ -17,7 +18,7 @@ import { Link } from 'react-router-dom';
 
 const Index = () => {
   const { user } = useAuth();
-  const { articles, loading, togglePin, markAsRead, deleteArticle, refetch } = useArticles();
+  const { articles, loading, togglePin, markAsRead, deleteArticle, refetch } = useRealArticles();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);

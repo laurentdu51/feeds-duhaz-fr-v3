@@ -9,6 +9,59 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      articles: {
+        Row: {
+          content: string | null
+          created_at: string
+          description: string | null
+          feed_id: string
+          guid: string | null
+          id: string
+          image_url: string | null
+          published_at: string
+          read_time: number | null
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          feed_id: string
+          guid?: string | null
+          id?: string
+          image_url?: string | null
+          published_at: string
+          read_time?: number | null
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          feed_id?: string
+          guid?: string | null
+          id?: string
+          image_url?: string | null
+          published_at?: string
+          read_time?: number | null
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "feeds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feeds: {
         Row: {
           article_count: number | null
@@ -16,6 +69,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          last_fetched_at: string | null
           last_updated: string | null
           name: string
           status: string
@@ -29,6 +83,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          last_fetched_at?: string | null
           last_updated?: string | null
           name: string
           status?: string
@@ -42,6 +97,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          last_fetched_at?: string | null
           last_updated?: string | null
           name?: string
           status?: string
@@ -71,6 +127,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_articles: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          is_pinned: boolean
+          is_read: boolean
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          is_read?: boolean
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          is_read?: boolean
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_articles_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_feeds: {
         Row: {
