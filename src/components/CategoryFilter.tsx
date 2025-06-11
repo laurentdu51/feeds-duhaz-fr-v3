@@ -8,14 +8,17 @@ import {
   Play, 
   Gamepad2, 
   Newspaper,
-  Filter
+  Filter,
+  Pin
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CategoryFilterProps {
   categories: NewsCategory[];
   selectedCategory: string | null;
   onCategoryChange: (categoryId: string | null) => void;
   newsCount: number;
+  pinnedCount?: number;
 }
 
 const iconMap = {
@@ -29,8 +32,11 @@ const CategoryFilter = ({
   categories, 
   selectedCategory, 
   onCategoryChange,
-  newsCount 
+  newsCount,
+  pinnedCount = 0
 }: CategoryFilterProps) => {
+  const { user } = useAuth();
+
   return (
     <div className="bg-card border rounded-lg p-6 space-y-4">
       <div className="flex items-center gap-2">
@@ -67,6 +73,18 @@ const CategoryFilter = ({
           );
         })}
       </div>
+
+      {user && (
+        <div className="pt-4 border-t">
+          <div className="flex items-center gap-2">
+            <Pin className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Épinglé</span>
+            <Badge variant="secondary" className="ml-auto">
+              {pinnedCount > 0 ? `${pinnedCount}` : 'Aucun'}
+            </Badge>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

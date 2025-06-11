@@ -146,6 +146,7 @@ const Index = () => {
               selectedCategory={selectedCategory}
               onCategoryChange={setSelectedCategory}
               newsCount={articles.length}
+              pinnedCount={pinnedCount}
             />
             
             <div className="bg-card border rounded-lg p-4 space-y-3">
@@ -159,10 +160,12 @@ const Index = () => {
                   <span className="text-muted-foreground">Non lus</span>
                   <Badge variant="default">{unreadCount}</Badge>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Épinglés</span>
-                  <Badge variant="secondary">{pinnedCount}</Badge>
-                </div>
+                {user && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Épinglés</span>
+                    <Badge variant="secondary">{pinnedCount}</Badge>
+                  </div>
+                )}
               </div>
             </div>
           </div>
