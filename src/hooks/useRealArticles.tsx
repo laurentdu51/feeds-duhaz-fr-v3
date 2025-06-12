@@ -13,6 +13,7 @@ export function useRealArticles() {
   const fetchArticles = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching articles...', { user: !!user });
       
       if (user) {
         // For authenticated users, fetch articles from their followed feeds
@@ -23,15 +24,51 @@ export function useRealArticles() {
           .eq('is_followed', true);
 
         if (userFeedsError) {
-          console.error('Error fetching user feeds:', userFeedsError);
+          console.error('❌ Error fetching user feeds:', userFeedsError);
           toast.error('Erreur lors du chargement de vos flux');
           return;
         }
 
+        console.log('📋 User followed feeds:', userFeeds);
         const followedFeedIds = userFeeds?.map(uf => uf.feed_id) || [];
         
         if (followedFeedIds.length === 0) {
-          setArticles([]);
+          console.log('⚠️ No followed feeds found for user');
+          // Si l'utilisateur ne suit aucun flux, on affiche les articles récents
+          const { data: recentArticles, error: recentError } = await supabase
+            .from('articles')
+            .select(`
+              *,
+              feeds!inner(name, category)
+            `)
+            .order('published_at', { ascending: false })
+            .limit(20);
+
+          if (recentError) {
+            console.error('❌ Error fetching recent articles:', recentError);
+            toast.error('Erreur lors du chargement des articles');
+            return;
+          }
+
+          console.log('📰 Recent articles for user with no followed feeds:', recentArticles?.length);
+          
+          // Transform to NewsItem format
+          const transformedArticles: NewsItem[] = recentArticles?.map(article => ({
+            id: article.id,
+            title: article.title,
+            description: article.description || '',
+            content: article.content || '',
+            source: article.feeds.name,
+            category: article.feeds.category as NewsItem['category'],
+            publishedAt: article.published_at,
+            readTime: article.read_time || 5,
+            isPinned: false,
+            isRead: false,
+            url: article.url || undefined,
+            imageUrl: article.image_url || undefined
+          })) || [];
+
+          setArticles(transformedArticles);
           return;
         }
 
@@ -48,13 +85,15 @@ export function useRealArticles() {
           .limit(100);
 
         if (articlesError) {
-          console.error('Error fetching articles:', articlesError);
+          console.error('❌ Error fetching articles:', articlesError);
           toast.error('Erreur lors du chargement des articles');
           return;
         }
 
+        console.log('📰 Articles found for followed feeds:', articlesData?.length);
+
         // Transform to NewsItem format
-        const transformedArticles: NewsItem[] = articlesData.map(article => ({
+        const transformedArticles: NewsItem[] = articlesData?.map(article => ({
           id: article.id,
           title: article.title,
           description: article.description || '',
@@ -67,11 +106,12 @@ export function useRealArticles() {
           isRead: article.user_articles[0]?.is_read || false,
           url: article.url || undefined,
           imageUrl: article.image_url || undefined
-        }));
+        })) || [];
 
         setArticles(transformedArticles);
       } else {
         // For visitors, show recent articles from all feeds
+        console.log('👤 Loading articles for visitor');
         const { data: articlesData, error: articlesError } = await supabase
           .from('articles')
           .select(`
@@ -82,13 +122,15 @@ export function useRealArticles() {
           .limit(50);
 
         if (articlesError) {
-          console.error('Error fetching public articles:', articlesError);
+          console.error('❌ Error fetching public articles:', articlesError);
           toast.error('Erreur lors du chargement des articles');
           return;
         }
 
+        console.log('📰 Public articles found:', articlesData?.length);
+
         // Transform to NewsItem format
-        const transformedArticles: NewsItem[] = articlesData.map(article => ({
+        const transformedArticles: NewsItem[] = articlesData?.map(article => ({
           id: article.id,
           title: article.title,
           description: article.description || '',
@@ -101,12 +143,12 @@ export function useRealArticles() {
           isRead: false,
           url: article.url || undefined,
           imageUrl: article.image_url || undefined
-        }));
+        })) || [];
 
         setArticles(transformedArticles);
       }
     } catch (error) {
-      console.error('Error in fetchArticles:', error);
+      console.error('💥 Error in fetchArticles:', error);
       toast.error('Erreur lors du chargement des articles');
     } finally {
       setLoading(false);

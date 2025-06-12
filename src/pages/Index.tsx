@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { categories } from '@/data/mockNews';
 import { useRealArticles } from '@/hooks/useRealArticles';
@@ -12,7 +11,7 @@ import ArticleModal from '@/components/ArticleModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { RefreshCw, Filter, User, Rss } from 'lucide-react';
+import { RefreshCw, Filter, User, Rss, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
@@ -25,6 +24,8 @@ const Index = () => {
   const [isAddFeedModalOpen, setIsAddFeedModalOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+
+  console.log('🏠 Index page - Articles count:', articles.length, 'Loading:', loading, 'User:', !!user);
 
   const filteredNews = useMemo(() => {
     let filtered = articles;
@@ -117,7 +118,7 @@ const Index = () => {
           </Card>
         )}
 
-        {/* Message pour les utilisateurs connectés sans articles */}
+        {/* Message pour les utilisateurs connectés sans articles suivis */}
         {user && articles.length === 0 && (
           <Card className="mb-6 border-yellow-200 bg-yellow-50">
             <CardContent className="pt-6">
@@ -126,14 +127,31 @@ const Index = () => {
                 <div className="flex-1">
                   <p className="font-medium text-yellow-900">Aucun article trouvé</p>
                   <p className="text-sm text-yellow-700">
-                    Vous ne suivez aucun flux pour le moment. Visitez la page de gestion des flux pour commencer à suivre des sources d'actualités.
+                    Commencez par suivre des flux RSS pour voir vos articles ici. Vous verrez aussi quelques articles récents même sans flux suivis.
                   </p>
                 </div>
-                <Link to="/feeds">
-                  <Button size="sm">
-                    Gérer les flux
+                <div className="flex gap-2">
+                  <Link to="/feeds">
+                    <Button size="sm" variant="outline">
+                      Gérer les flux
+                    </Button>
+                  </Link>
+                  <Button size="sm" onClick={() => setIsAddFeedModalOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter un flux
                   </Button>
-                </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Debug info en développement */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="mb-6 border-gray-200 bg-gray-50">
+            <CardContent className="pt-4">
+              <div className="text-xs text-gray-600">
+                <p>Debug: {articles.length} articles trouvés | Utilisateur: {user ? 'connecté' : 'visiteur'}</p>
               </div>
             </CardContent>
           </Card>
@@ -206,12 +224,33 @@ const Index = () => {
               </div>
             </div>
             
-            {filteredNews.length === 0 ? (
+            {filteredNews.length === 0 && articles.length > 0 ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">Aucun article trouvé</p>
+                <p className="text-muted-foreground text-lg">Aucun article trouvé avec ces filtres</p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Essayez de modifier vos filtres ou votre recherche
                 </p>
+              </div>
+            ) : filteredNews.length === 0 ? (
+              <div className="text-center py-12">
+                <Rss className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg">Aucun article disponible</p>
+                <p className="text-sm text-muted-foreground mt-2 mb-4">
+                  {user ? 'Suivez des flux RSS pour voir des articles ici' : 'Aucun article public disponible pour le moment'}
+                </p>
+                {user && (
+                  <div className="flex gap-2 justify-center">
+                    <Link to="/feeds">
+                      <Button variant="outline">
+                        Gérer les flux
+                      </Button>
+                    </Link>
+                    <Button onClick={() => setIsAddFeedModalOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter un flux
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
