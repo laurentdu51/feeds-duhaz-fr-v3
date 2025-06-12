@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useFeeds } from '@/hooks/useFeeds';
 import { useFeedUpdate } from '@/hooks/useFeedUpdate';
@@ -32,7 +33,8 @@ import {
   User,
   RefreshCw,
   Edit,
-  XCircle
+  XCircle,
+  Timer
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AddFeedModal from '@/components/AddFeedModal';
@@ -257,6 +259,21 @@ const FeedsManagement = () => {
 
       <main className="container mx-auto px-4 py-6">
         <div className="space-y-6">
+          {/* Auto-update notification */}
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <Timer className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-900">Mise à jour automatique activée</p>
+                  <p className="text-sm text-green-700">
+                    Les flux actifs sont automatiquement mis à jour toutes les 10 minutes.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Statistiques */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
@@ -283,6 +300,7 @@ const FeedsManagement = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">{activeCount}</div>
+                <p className="text-xs text-muted-foreground mt-1">Mis à jour auto</p>
               </CardContent>
             </Card>
             <Card>
@@ -394,7 +412,8 @@ const FeedsManagement = () => {
             <CardHeader>
               <CardTitle>Flux disponibles</CardTitle>
               <CardDescription>
-                {filteredFeeds.length} flux trouvé{filteredFeeds.length !== 1 ? 's' : ''}
+                {filteredFeeds.length} flux trouvé{filteredFeeds.length !== 1 ? 's' : ''} • 
+                Mise à jour automatique toutes les 10 minutes pour les flux actifs
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -420,7 +439,15 @@ const FeedsManagement = () => {
                         <TableRow key={feed.id}>
                           <TableCell>
                             <div className="space-y-1">
-                              <div className="font-medium">{feed.name}</div>
+                              <div className="flex items-center gap-2">
+                                <div className="font-medium">{feed.name}</div>
+                                {feed.status === 'active' && (
+                                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                    <Timer className="h-3 w-3 mr-1" />
+                                    Auto
+                                  </Badge>
+                                )}
+                              </div>
                               {feed.description && (
                                 <div className="text-sm text-muted-foreground">
                                   {feed.description}
