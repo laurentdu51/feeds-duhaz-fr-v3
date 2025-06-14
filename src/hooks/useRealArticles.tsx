@@ -34,12 +34,13 @@ export function useRealArticles() {
         
         if (followedFeedIds.length === 0) {
           console.log('⚠️ No followed feeds found for user');
-          // Si l'utilisateur ne suit aucun flux, on affiche les articles récents
+          // Si l'utilisateur ne suit aucun flux, on affiche les articles récents non lus
           const { data: recentArticles, error: recentError } = await supabase
             .from('articles')
             .select(`
               *,
-              feeds!inner(name, category)
+              feeds!inner(name, category),
+              user_articles(is_read, is_pinned)
             `)
             .order('published_at', { ascending: false })
             .limit(20);
@@ -52,27 +53,29 @@ export function useRealArticles() {
 
           console.log('📰 Recent articles for user with no followed feeds:', recentArticles?.length);
           
-          // Transform to NewsItem format
-          const transformedArticles: NewsItem[] = recentArticles?.map(article => ({
-            id: article.id,
-            title: article.title,
-            description: article.description || '',
-            content: article.content || '',
-            source: article.feeds.name,
-            category: article.feeds.category as NewsItem['category'],
-            publishedAt: article.published_at,
-            readTime: article.read_time || 5,
-            isPinned: false,
-            isRead: false,
-            url: article.url || undefined,
-            imageUrl: article.image_url || undefined
-          })) || [];
+          // Transform to NewsItem format and filter out read articles
+          const transformedArticles: NewsItem[] = recentArticles
+            ?.filter(article => !article.user_articles[0]?.is_read) // Filter out read articles
+            ?.map(article => ({
+              id: article.id,
+              title: article.title,
+              description: article.description || '',
+              content: article.content || '',
+              source: article.feeds.name,
+              category: article.feeds.category as NewsItem['category'],
+              publishedAt: article.published_at,
+              readTime: article.read_time || 5,
+              isPinned: article.user_articles[0]?.is_pinned || false,
+              isRead: article.user_articles[0]?.is_read || false,
+              url: article.url || undefined,
+              imageUrl: article.image_url || undefined
+            })) || [];
 
           setArticles(transformedArticles);
           return;
         }
 
-        // Fetch articles from followed feeds with user interactions
+        // Fetch articles from followed feeds with user interactions, excluding read articles
         const { data: articlesData, error: articlesError } = await supabase
           .from('articles')
           .select(`
@@ -92,21 +95,23 @@ export function useRealArticles() {
 
         console.log('📰 Articles found for followed feeds:', articlesData?.length);
 
-        // Transform to NewsItem format
-        const transformedArticles: NewsItem[] = articlesData?.map(article => ({
-          id: article.id,
-          title: article.title,
-          description: article.description || '',
-          content: article.content || '',
-          source: article.feeds.name,
-          category: article.feeds.category as NewsItem['category'],
-          publishedAt: article.published_at,
-          readTime: article.read_time || 5,
-          isPinned: article.user_articles[0]?.is_pinned || false,
-          isRead: article.user_articles[0]?.is_read || false,
-          url: article.url || undefined,
-          imageUrl: article.image_url || undefined
-        })) || [];
+        // Transform to NewsItem format and filter out read articles
+        const transformedArticles: NewsItem[] = articlesData
+          ?.filter(article => !article.user_articles[0]?.is_read) // Filter out read articles
+          ?.map(article => ({
+            id: article.id,
+            title: article.title,
+            description: article.description || '',
+            content: article.content || '',
+            source: article.feeds.name,
+            category: article.feeds.category as NewsItem['category'],
+            publishedAt: article.published_at,
+            readTime: article.read_time || 5,
+            isPinned: article.user_articles[0]?.is_pinned || false,
+            isRead: article.user_articles[0]?.is_read || false,
+            url: article.url || undefined,
+            imageUrl: article.image_url || undefined
+          })) || [];
 
         setArticles(transformedArticles);
       } else {
@@ -219,9 +224,10 @@ export function useRealArticles() {
         return;
       }
 
-      setArticles(prev => prev.map(item => 
-        item.id === articleId ? { ...item, isRead: true } : item
-      ));
+      // Remove the article from the list instead of just marking it as read
+      setArticles(prev => prev.filter(item => item.id !== articleId));
+      
+      toast.success("Article marqué comme lu et retiré de la liste");
     } catch (error) {
       console.error('Error marking as read:', error);
     }

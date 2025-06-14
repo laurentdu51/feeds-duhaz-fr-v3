@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from 'react';
 import { categories } from '@/data/mockNews';
 import { useRealArticles } from '@/hooks/useRealArticles';
@@ -53,7 +54,7 @@ const Index = () => {
   }, [articles, selectedCategory, searchQuery]);
 
   const pinnedCount = articles.filter(item => item.isPinned).length;
-  const unreadCount = articles.filter(item => !item.isRead).length;
+  const unreadCount = articles.length; // All displayed articles are unread now
 
   const handleRefresh = () => {
     refetch();
@@ -105,7 +106,7 @@ const Index = () => {
                 <div className="flex-1">
                   <p className="font-medium text-blue-900">Vous consultez les derniers articles publics</p>
                   <p className="text-sm text-blue-700">
-                    Connectez-vous pour voir uniquement les articles de vos flux suivis et personnaliser votre expérience.
+                    Connectez-vous pour voir uniquement les articles non lus de vos flux suivis et personnaliser votre expérience.
                   </p>
                 </div>
                 <Link to="/auth">
@@ -125,9 +126,9 @@ const Index = () => {
               <div className="flex items-center gap-3">
                 <Rss className="h-5 w-5 text-yellow-600" />
                 <div className="flex-1">
-                  <p className="font-medium text-yellow-900">Aucun article trouvé</p>
+                  <p className="font-medium text-yellow-900">Aucun article non lu trouvé</p>
                   <p className="text-sm text-yellow-700">
-                    Commencez par suivre des flux RSS pour voir vos articles ici. Vous verrez aussi quelques articles récents même sans flux suivis.
+                    Tous vos articles sont lus ! Ajoutez de nouveaux flux RSS ou actualisez pour voir de nouveaux articles.
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -151,7 +152,7 @@ const Index = () => {
           <Card className="mb-6 border-gray-200 bg-gray-50">
             <CardContent className="pt-4">
               <div className="text-xs text-gray-600">
-                <p>Debug: {articles.length} articles trouvés | Utilisateur: {user ? 'connecté' : 'visiteur'}</p>
+                <p>Debug: {articles.length} articles non lus trouvés | Utilisateur: {user ? 'connecté' : 'visiteur'}</p>
               </div>
             </CardContent>
           </Card>
@@ -172,12 +173,8 @@ const Index = () => {
               <h3 className="font-semibold text-sm">Statistiques</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total articles</span>
+                  <span className="text-muted-foreground">Articles non lus</span>
                   <Badge variant="outline">{articles.length}</Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Non lus</span>
-                  <Badge variant="default">{unreadCount}</Badge>
                 </div>
                 {user && (
                   <div className="flex justify-between">
@@ -194,7 +191,7 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-bold">
-                  {user ? 'Vos flux suivis' : 'Derniers articles'}
+                  {user ? 'Articles non lus' : 'Derniers articles'}
                 </h2>
                 <Badge variant="outline">
                   {filteredNews.length} article{filteredNews.length !== 1 ? 's' : ''}
@@ -234,9 +231,9 @@ const Index = () => {
             ) : filteredNews.length === 0 ? (
               <div className="text-center py-12">
                 <Rss className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-lg">Aucun article disponible</p>
+                <p className="text-muted-foreground text-lg">Aucun article non lu disponible</p>
                 <p className="text-sm text-muted-foreground mt-2 mb-4">
-                  {user ? 'Suivez des flux RSS pour voir des articles ici' : 'Aucun article public disponible pour le moment'}
+                  {user ? 'Bravo ! Tous vos articles sont lus ou suivez des flux RSS pour voir des articles ici' : 'Aucun article public disponible pour le moment'}
                 </p>
                 {user && (
                   <div className="flex gap-2 justify-center">
