@@ -116,10 +116,11 @@ export function useRealArticles() {
           .from('articles')
           .select(`
             *,
-            feeds!inner(name, category)
+            feeds(name, category)
           `)
+          .not('feeds', 'is', null)
           .order('published_at', { ascending: false })
-          .limit(50);
+          .limit(20);
 
         if (articlesError) {
           console.error('❌ Error fetching public articles:', articlesError);
@@ -129,21 +130,23 @@ export function useRealArticles() {
 
         console.log('📰 Public articles found:', articlesData?.length);
 
-        // Transform to NewsItem format
-        const transformedArticles: NewsItem[] = articlesData?.map(article => ({
-          id: article.id,
-          title: article.title,
-          description: article.description || '',
-          content: article.content || '',
-          source: article.feeds.name,
-          category: article.feeds.category as NewsItem['category'],
-          publishedAt: article.published_at,
-          readTime: article.read_time || 5,
-          isPinned: false,
-          isRead: false,
-          url: article.url || undefined,
-          imageUrl: article.image_url || undefined
-        })) || [];
+        // Transform to NewsItem format - filter out articles without feeds
+        const transformedArticles: NewsItem[] = articlesData
+          ?.filter(article => article.feeds) // Only keep articles with valid feeds
+          ?.map(article => ({
+            id: article.id,
+            title: article.title,
+            description: article.description || '',
+            content: article.content || '',
+            source: article.feeds.name,
+            category: article.feeds.category as NewsItem['category'],
+            publishedAt: article.published_at,
+            readTime: article.read_time || 5,
+            isPinned: false,
+            isRead: false,
+            url: article.url || undefined,
+            imageUrl: article.image_url || undefined
+          })) || [];
 
         setArticles(transformedArticles);
       }
