@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts'
 
 interface RSSItem {
   title: string;
@@ -46,9 +47,9 @@ serve(async (req) => {
 
     const rssText = await response.text()
     
-    // Parse RSS using DOMParser
+    // Parse RSS using deno-dom DOMParser
     const parser = new DOMParser()
-    const doc = parser.parseFromString(rssText, 'application/xml')
+    const doc = parser.parseFromString(rssText, 'text/xml')
     
     if (!doc) {
       throw new Error('Failed to parse RSS XML')
