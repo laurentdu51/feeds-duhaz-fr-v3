@@ -98,8 +98,47 @@ const convertYouTubeToRSS = (url: string): string => {
   return url;
 };
 
+// Function to fetch YouTube channel name from page metadata
+const fetchYouTubeChannelName = async (url: string): Promise<string | null> => {
+  try {
+    // Use a CORS proxy to fetch the YouTube page
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    const data = await response.json();
+    
+    if (data.contents) {
+      const html = data.contents;
+      
+      // Try to extract channel name from various meta tags
+      const metaPatterns = [
+        /<meta property="og:title" content="([^"]+)"/,
+        /<meta name="twitter:title" content="([^"]+)"/,
+        /<title>([^<]+)<\/title>/,
+        /<meta property="og:site_name" content="([^"]+)"/
+      ];
+      
+      for (const pattern of metaPatterns) {
+        const match = html.match(pattern);
+        if (match && match[1]) {
+          let title = match[1].trim();
+          // Clean up the title (remove " - YouTube" suffix if present)
+          title = title.replace(/ - YouTube$/, '');
+          if (title && title !== 'YouTube') {
+            return title;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching YouTube channel name:', error);
+  }
+  
+  return null;
+};
+
 const AddFeedModal = ({ isOpen, onClose, onAddFeed, categories }: AddFeedModalProps) => {
   const [selectedType, setSelectedType] = useState<string>('');
+  const [isLoadingChannelName, setIsLoadingChannelName] = useState(false);
   
   const form = useForm<FeedFormData>({
     defaultValues: {
@@ -142,6 +181,23 @@ const AddFeedModal = ({ isOpen, onClose, onAddFeed, categories }: AddFeedModalPr
     onClose();
   };
 
+  const handleUrlChange = async (url: string) => {
+    form.setValue('url', url);
+    
+    // If it's a YouTube URL and we don't have a name yet, try to fetch it
+    if (selectedType === 'youtube' && url && !form.getValues('name')) {
+      const isYouTubeUrl = url.includes('youtube.com');
+      if (isYouTubeUrl) {
+        setIsLoadingChannelName(true);
+        const channelName = await fetchYouTubeChannelName(url);
+        if (channelName) {
+          form.setValue('name', channelName);
+        }
+        setIsLoadingChannelName(false);
+      }
+    }
+  };
+
   const selectedTypeOption = feedTypeOptions.find(option => option.value === selectedType);
 
   const getUrlPlaceholder = () => {
@@ -158,7 +214,7 @@ const AddFeedModal = ({ isOpen, onClose, onAddFeed, categories }: AddFeedModalPr
 
   const getUrlHelperText = () => {
     if (selectedType === 'youtube') {
-      return 'Collez le lien de la chaîne YouTube (sera automatiquement converti en flux RSS)';
+      return 'Collez le lien de la chaîne YouTube (nom détecté automatiquement)';
     }
     return null;
   };
@@ -214,12 +270,20 @@ const AddFeedModal = ({ isOpen, onClose, onAddFeed, categories }: AddFeedModalPr
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom du flux</FormLabel>
+                    <FormLabel>
+                      Nom du flux
+                      {isLoadingChannelName && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          (détection automatique...)
+                        </span>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="Nom du flux..." 
                         {...field} 
                         required
+                        disabled={isLoadingChannelName}
                       />
                     </FormControl>
                     <FormMessage />
@@ -238,6 +302,7 @@ const AddFeedModal = ({ isOpen, onClose, onAddFeed, categories }: AddFeedModalPr
                         placeholder={getUrlPlaceholder()}
                         type="url"
                         {...field} 
+                        onChange={(e) => handleUrlChange(e.target.value)}
                         required
                       />
                     </FormControl>
@@ -273,7 +338,7 @@ const AddFeedModal = ({ isOpen, onClose, onAddFeed, categories }: AddFeedModalPr
                 <Button type="button" variant="outline" onClick={handleCancel}>
                   Annuler
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={isLoadingChannelName}>
                   Ajouter le flux
                 </Button>
               </DialogFooter>
