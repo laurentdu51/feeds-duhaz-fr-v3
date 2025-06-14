@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts'
 
 interface RSSItem {
   title: string;
@@ -22,6 +21,26 @@ interface RSSFeed {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Helper function to extract text content from XML tags
+function extractTextContent(xml: string, tagName: string): string {
+  const regex = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, 'i');
+  const match = xml.match(regex);
+  if (match && match[1]) {
+    // Remove CDATA wrapper if present and clean HTML tags
+    let content = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/s, '$1');
+    content = content.replace(/<[^>]*>/g, '').trim();
+    return content;
+  }
+  return '';
+}
+
+// Helper function to extract attribute from XML tags
+function extractAttribute(xml: string, tagName: string, attributeName: string): string {
+  const regex = new RegExp(`<${tagName}[^>]*${attributeName}=["']([^"']*)["'][^>]*>`, 'i');
+  const match = xml.match(regex);
+  return match ? match[1] : '';
 }
 
 serve(async (req) => {
@@ -46,52 +65,60 @@ serve(async (req) => {
     }
 
     const rssText = await response.text()
+    console.log(`RSS content length: ${rssText.length}`)
     
-    // Parse RSS using deno-dom DOMParser
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(rssText, 'text/xml')
+    // Parse RSS using regex patterns
+    const items: RSSItem[] = [];
     
-    if (!doc) {
-      throw new Error('Failed to parse RSS XML')
-    }
-
-    // Extract RSS items
-    const items = Array.from(doc.querySelectorAll('item, entry')).map(item => {
-      const title = item.querySelector('title')?.textContent?.trim() || ''
-      const description = item.querySelector('description, summary')?.textContent?.trim() || ''
-      const link = item.querySelector('link')?.textContent?.trim() || 
-                  item.querySelector('link')?.getAttribute('href') || ''
-      const pubDate = item.querySelector('pubDate, published')?.textContent?.trim() || ''
-      const guid = item.querySelector('guid')?.textContent?.trim() || link
+    // Split by item or entry tags
+    const itemRegex = /<(item|entry)[^>]*>([\s\S]*?)<\/\1>/gi;
+    let itemMatch;
+    
+    while ((itemMatch = itemRegex.exec(rssText)) !== null) {
+      const itemXml = itemMatch[0];
       
-      // Try to extract image from content or enclosure
-      let image = ''
-      const enclosure = item.querySelector('enclosure[type^="image"]')
-      if (enclosure) {
-        image = enclosure.getAttribute('url') || ''
-      } else {
-        // Try to find image in content
-        const content = item.querySelector('content\\:encoded, content')?.textContent
-        if (content) {
-          const imgMatch = content.match(/<img[^>]+src="([^">]+)"/i)
-          if (imgMatch) {
-            image = imgMatch[1]
-          }
+      const title = extractTextContent(itemXml, 'title');
+      const description = extractTextContent(itemXml, 'description') || 
+                         extractTextContent(itemXml, 'summary') ||
+                         extractTextContent(itemXml, 'content');
+      
+      let link = extractTextContent(itemXml, 'link');
+      if (!link) {
+        // Try to get link from href attribute
+        link = extractAttribute(itemXml, 'link', 'href');
+      }
+      
+      const pubDate = extractTextContent(itemXml, 'pubDate') || 
+                     extractTextContent(itemXml, 'published') ||
+                     extractTextContent(itemXml, 'updated');
+      
+      const guid = extractTextContent(itemXml, 'guid') || 
+                  extractTextContent(itemXml, 'id') || 
+                  link;
+      
+      // Try to extract image from enclosure or content
+      let image = extractAttribute(itemXml, 'enclosure', 'url');
+      if (!image && description) {
+        const imgMatch = description.match(/src=["']([^"']*\.(jpg|jpeg|png|gif|webp))[^"']*/i);
+        if (imgMatch) {
+          image = imgMatch[1];
         }
       }
 
-      return {
-        title,
-        description,
-        link,
-        pubDate,
-        guid,
-        image,
-        content: description
+      if (title && guid) {
+        items.push({
+          title,
+          description: description || '',
+          link: link || '',
+          pubDate: pubDate || new Date().toISOString(),
+          guid,
+          image: image || '',
+          content: description || ''
+        });
       }
-    }).filter(item => item.title && item.guid)
+    }
 
-    console.log(`Found ${items.length} items`)
+    console.log(`Parsed ${items.length} items from RSS feed`)
 
     // Save articles to database
     const articlesToInsert = items.map(item => {
@@ -99,18 +126,33 @@ serve(async (req) => {
       const wordCount = (item.description || '').split(' ').length
       const readTime = Math.max(1, Math.ceil(wordCount / 200))
 
+      // Parse and validate date
+      let publishedAt: string;
+      try {
+        if (item.pubDate) {
+          publishedAt = new Date(item.pubDate).toISOString();
+        } else {
+          publishedAt = new Date().toISOString();
+        }
+      } catch (error) {
+        console.log(`Invalid date format: ${item.pubDate}, using current date`);
+        publishedAt = new Date().toISOString();
+      }
+
       return {
         feed_id: feedId,
         title: item.title,
         description: item.description,
         content: item.content || item.description,
-        url: item.link,
+        url: item.link || null,
         image_url: item.image || null,
-        published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+        published_at: publishedAt,
         guid: item.guid,
         read_time: readTime
       }
     })
+
+    console.log(`Preparing to insert ${articlesToInsert.length} articles`)
 
     // Insert articles (on conflict do nothing to avoid duplicates)
     const { error: insertError } = await supabaseClient
