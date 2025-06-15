@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -13,9 +12,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { DialogFooter } from '@/components/ui/dialog';
-import { convertYouTubeToRSS, fetchYouTubeChannelName } from '@/utils/youtube';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  convertYouTubeToRSS, 
+  fetchYouTubeChannelName, 
+  needsChannelIdLookup, 
+  getChannelIdInstructions,
+  isDirectRSSFeed
+} from '@/utils/youtube';
 import { feedTypeOptions } from './FeedTypeOptions';
 import { NewsCategory } from '@/types/news';
+import { AlertTriangle, Info } from 'lucide-react';
 
 interface FeedFormData {
   name: string;
@@ -34,6 +41,7 @@ interface FeedFormProps {
 const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProps) => {
   const [isLoadingChannelName, setIsLoadingChannelName] = useState(false);
   const [urlWarning, setUrlWarning] = useState<string | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
   
   const form = useForm<FeedFormData>({
     defaultValues: {
@@ -66,6 +74,7 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
   const handleUrlChange = async (url: string) => {
     form.setValue('url', url);
     setUrlWarning(null);
+    setShowInstructions(false);
     
     // If it's a YouTube URL and we don't have a name yet, try to fetch it
     if (selectedType === 'youtube' && url && !form.getValues('name')) {
@@ -73,9 +82,14 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
       if (isYouTubeUrl) {
         setIsLoadingChannelName(true);
         
+        // Check if it's a direct RSS feed
+        if (isDirectRSSFeed(url)) {
+          setUrlWarning(null);
+        }
         // Check if it's a custom username that might not work directly
-        if (url.includes('/@') && !url.includes('/channel/')) {
-          setUrlWarning('Note: Les URL avec @username peuvent nécessiter l\'ID de chaîne réel (UC...) pour fonctionner. Si le flux ne fonctionne pas, trouvez l\'ID de chaîne sur YouTube.');
+        else if (needsChannelIdLookup(url)) {
+          setUrlWarning('Cette URL pourrait ne pas fonctionner. Pour de meilleurs résultats, utilisez l\'ID de chaîne (UC...).');
+          setShowInstructions(true);
         }
         
         const channelName = await fetchYouTubeChannelName(url);
@@ -92,7 +106,7 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
   const getUrlPlaceholder = () => {
     switch (selectedType) {
       case 'youtube':
-        return 'https://www.youtube.com/@channelname ou https://www.youtube.com/channel/UCxxxxx';
+        return 'https://www.youtube.com/channel/UCxxxxx ou https://www.youtube.com/feeds/videos.xml?channel_id=UCxxxxx';
       case 'rss-auto':
       case 'rss-manual':
         return 'https://example.com/feed.xml';
@@ -103,7 +117,7 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
 
   const getUrlHelperText = () => {
     if (selectedType === 'youtube') {
-      return 'Pour de meilleurs résultats, utilisez l\'URL avec l\'ID de chaîne (commençant par UC...) si possible';
+      return 'Utilisez de préférence l\'URL avec l\'ID de chaîne (UC...) ou l\'URL RSS directe pour éviter les erreurs';
     }
     return null;
   };
@@ -169,9 +183,20 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
                 </p>
               )}
               {urlWarning && (
-                <p className="text-xs text-yellow-600 mt-1">
-                  ⚠️ {urlWarning}
-                </p>
+                <Alert className="mt-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    {urlWarning}
+                  </AlertDescription>
+                </Alert>
+              )}
+              {showInstructions && selectedType === 'youtube' && (
+                <Alert className="mt-2">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="text-sm whitespace-pre-line">
+                    {getChannelIdInstructions()}
+                  </AlertDescription>
+                </Alert>
               )}
               <FormMessage />
             </FormItem>

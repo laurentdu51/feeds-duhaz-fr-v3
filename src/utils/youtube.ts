@@ -21,10 +21,15 @@ export const extractYouTubeChannelId = (url: string): string | null => {
   return null;
 };
 
+// Function to detect if a URL is a direct RSS feed
+export const isDirectRSSFeed = (url: string): boolean => {
+  return url.includes('feeds/videos.xml?channel_id=');
+};
+
 // Function to convert YouTube channel URL to RSS feed URL
 export const convertYouTubeToRSS = (url: string): string => {
   // If it's already an RSS feed URL, return as is
-  if (url.includes('feeds/videos.xml')) {
+  if (isDirectRSSFeed(url)) {
     return url;
   }
 
@@ -32,13 +37,11 @@ export const convertYouTubeToRSS = (url: string): string => {
   
   if (channelId) {
     // For channel ID format (starts with UC), we can directly create the RSS URL
-    if (url.includes('/channel/') || channelId.startsWith('UC')) {
+    if (url.includes('/channel/') && channelId.startsWith('UC')) {
       return `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
     }
     
-    // For other formats (@username, /c/, /user/), we need to note that
-    // these might not work directly and may need manual channel ID lookup
-    // For now, we'll try with the extracted identifier but add a warning
+    // For other formats, warn that it might not work
     console.warn(`YouTube RSS URL might not work for custom username: ${channelId}. You may need to find the actual channel ID starting with 'UC'`);
     return `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
   }
@@ -68,6 +71,20 @@ export const extractChannelNameFromUrl = (url: string): string | null => {
   }
   
   return null;
+};
+
+// Function to check if URL needs channel ID lookup
+export const needsChannelIdLookup = (url: string): boolean => {
+  return url.includes('/@') || url.includes('/c/') || url.includes('/user/');
+};
+
+// Function to get instructions for finding channel ID
+export const getChannelIdInstructions = (): string => {
+  return `Pour trouver l'ID de chaîne YouTube :
+1. Allez sur la page de la chaîne
+2. Clic droit → "Afficher le code source"
+3. Cherchez "channelId":"UC..." ou regardez les liens RSS
+4. Utilisez l'URL complète : https://www.youtube.com/channel/UCxxxxx`;
 };
 
 // Function to fetch YouTube channel name from page metadata with fallback
