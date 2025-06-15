@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useFeeds } from '@/hooks/useFeeds';
 import { useFeedUpdate } from '@/hooks/useFeedUpdate';
@@ -70,7 +69,8 @@ const FeedsManagement = () => {
     }
 
     try {
-      const { error } = await supabase
+      // Insert the new feed
+      const { data: newFeed, error } = await supabase
         .from('feeds')
         .insert({
           name: feedData.name,
@@ -79,7 +79,9 @@ const FeedsManagement = () => {
           description: feedData.description || null,
           category: feedData.category || 'general',
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error adding feed:', error);
@@ -89,7 +91,40 @@ const FeedsManagement = () => {
 
       toast.success('Flux ajouté avec succès');
       setIsAddFeedModalOpen(false);
-      // Refetch feeds to show the new one
+
+      // Test the feed by fetching content
+      try {
+        toast.info('Test de récupération du contenu...');
+        
+        const { data: testResult, error: testError } = await supabase.functions.invoke('fetch-rss', {
+          body: { feedId: newFeed.id, feedUrl: newFeed.url }
+        });
+
+        if (testError) {
+          console.error('Error testing feed:', testError);
+          toast.warning('Flux ajouté mais le test de récupération a échoué');
+        } else if (testResult.success) {
+          // If test successful, update status to active
+          const { error: updateError } = await supabase
+            .from('feeds')
+            .update({ status: 'active' })
+            .eq('id', newFeed.id);
+
+          if (updateError) {
+            console.error('Error updating feed status:', updateError);
+            toast.warning('Flux testé avec succès mais impossible de l\'activer automatiquement');
+          } else {
+            toast.success(`Flux activé automatiquement ! ${testResult.articlesProcessed} articles récupérés`);
+          }
+        } else {
+          toast.warning('Flux ajouté mais le test de récupération a échoué');
+        }
+      } catch (testError) {
+        console.error('Error testing feed:', testError);
+        toast.warning('Flux ajouté mais le test de récupération a échoué');
+      }
+
+      // Refetch feeds to show the updated status
       await refetch();
     } catch (error) {
       console.error('Error adding feed:', error);
