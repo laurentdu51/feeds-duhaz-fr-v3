@@ -46,40 +46,102 @@ export const convertYouTubeToRSS = (url: string): string => {
   return url;
 };
 
-// Function to fetch YouTube channel name from page metadata
+// Function to extract channel name from @username format URL
+export const extractChannelNameFromUrl = (url: string): string | null => {
+  // Try to extract from @username format
+  const atMatch = url.match(/youtube\.com\/@([a-zA-Z0-9_-]+)/);
+  if (atMatch && atMatch[1]) {
+    return atMatch[1];
+  }
+  
+  // Try to extract from /c/ format
+  const cMatch = url.match(/youtube\.com\/c\/([a-zA-Z0-9_-]+)/);
+  if (cMatch && cMatch[1]) {
+    return cMatch[1];
+  }
+  
+  // Try to extract from /user/ format
+  const userMatch = url.match(/youtube\.com\/user\/([a-zA-Z0-9_-]+)/);
+  if (userMatch && userMatch[1]) {
+    return userMatch[1];
+  }
+  
+  return null;
+};
+
+// Function to fetch YouTube channel name from page metadata with multiple fallbacks
 export const fetchYouTubeChannelName = async (url: string): Promise<string | null> => {
-  try {
-    // Use a CORS proxy to fetch the YouTube page
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
-    const data = await response.json();
-    
-    if (data.contents) {
-      const html = data.contents;
+  // First, try to extract name from URL if it's an @username format
+  const urlName = extractChannelNameFromUrl(url);
+  if (urlName) {
+    console.log('Extracted channel name from URL:', urlName);
+    return urlName;
+  }
+
+  // List of CORS proxy services to try
+  const proxies = [
+    'https://corsproxy.io/?',
+    'https://cors-anywhere.herokuapp.com/',
+    'https://api.allorigins.win/get?url='
+  ];
+  
+  for (const proxy of proxies) {
+    try {
+      console.log(`Trying proxy: ${proxy}`);
+      const proxyUrl = `${proxy}${encodeURIComponent(url)}`;
       
-      // Try to extract channel name from various meta tags
-      const metaPatterns = [
-        /<meta property="og:title" content="([^"]+)"/,
-        /<meta name="twitter:title" content="([^"]+)"/,
-        /<title>([^<]+)<\/title>/,
-        /<meta property="og:site_name" content="([^"]+)"/
-      ];
+      const response = await fetch(proxyUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+        // Add timeout
+        signal: AbortSignal.timeout(10000) // 10 seconds timeout
+      });
       
-      for (const pattern of metaPatterns) {
-        const match = html.match(pattern);
-        if (match && match[1]) {
-          let title = match[1].trim();
-          // Clean up the title (remove " - YouTube" suffix if present)
-          title = title.replace(/ - YouTube$/, '');
-          if (title && title !== 'YouTube') {
-            return title;
+      if (!response.ok) {
+        console.log(`Proxy ${proxy} failed with status:`, response.status);
+        continue;
+      }
+      
+      let html = '';
+      
+      // Handle different proxy response formats
+      if (proxy.includes('allorigins.win')) {
+        const data = await response.json();
+        html = data.contents || '';
+      } else {
+        html = await response.text();
+      }
+      
+      if (html) {
+        // Try to extract channel name from various meta tags
+        const metaPatterns = [
+          /<meta property="og:title" content="([^"]+)"/,
+          /<meta name="twitter:title" content="([^"]+)"/,
+          /<title>([^<]+)<\/title>/,
+          /<meta property="og:site_name" content="([^"]+)"/
+        ];
+        
+        for (const pattern of metaPatterns) {
+          const match = html.match(pattern);
+          if (match && match[1]) {
+            let title = match[1].trim();
+            // Clean up the title (remove " - YouTube" suffix if present)
+            title = title.replace(/ - YouTube$/, '');
+            if (title && title !== 'YouTube') {
+              console.log('Successfully extracted channel name:', title);
+              return title;
+            }
           }
         }
       }
+    } catch (error) {
+      console.log(`Proxy ${proxy} failed:`, error);
+      continue;
     }
-  } catch (error) {
-    console.error('Error fetching YouTube channel name:', error);
   }
   
+  console.log('All proxies failed, could not fetch channel name');
   return null;
 };
