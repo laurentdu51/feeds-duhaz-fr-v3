@@ -31,14 +31,15 @@ export const convertYouTubeToRSS = (url: string): string => {
   const channelId = extractYouTubeChannelId(url);
   
   if (channelId) {
-    // For channel ID format, we can directly create the RSS URL
-    if (url.includes('/channel/')) {
+    // For channel ID format (starts with UC), we can directly create the RSS URL
+    if (url.includes('/channel/') || channelId.startsWith('UC')) {
       return `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
     }
     
     // For other formats (@username, /c/, /user/), we need to note that
-    // the RSS conversion might need the actual channel ID
-    // For now, we'll try with the extracted identifier
+    // these might not work directly and may need manual channel ID lookup
+    // For now, we'll try with the extracted identifier but add a warning
+    console.warn(`YouTube RSS URL might not work for custom username: ${channelId}. You may need to find the actual channel ID starting with 'UC'`);
     return `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
   }
   
@@ -69,7 +70,7 @@ export const extractChannelNameFromUrl = (url: string): string | null => {
   return null;
 };
 
-// Function to fetch YouTube channel name from page metadata with multiple fallbacks
+// Function to fetch YouTube channel name from page metadata with fallback
 export const fetchYouTubeChannelName = async (url: string): Promise<string | null> => {
   // First, try to extract name from URL if it's an @username format
   const urlName = extractChannelNameFromUrl(url);
@@ -78,70 +79,8 @@ export const fetchYouTubeChannelName = async (url: string): Promise<string | nul
     return urlName;
   }
 
-  // List of CORS proxy services to try
-  const proxies = [
-    'https://corsproxy.io/?',
-    'https://cors-anywhere.herokuapp.com/',
-    'https://api.allorigins.win/get?url='
-  ];
-  
-  for (const proxy of proxies) {
-    try {
-      console.log(`Trying proxy: ${proxy}`);
-      const proxyUrl = `${proxy}${encodeURIComponent(url)}`;
-      
-      const response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-        // Add timeout
-        signal: AbortSignal.timeout(10000) // 10 seconds timeout
-      });
-      
-      if (!response.ok) {
-        console.log(`Proxy ${proxy} failed with status:`, response.status);
-        continue;
-      }
-      
-      let html = '';
-      
-      // Handle different proxy response formats
-      if (proxy.includes('allorigins.win')) {
-        const data = await response.json();
-        html = data.contents || '';
-      } else {
-        html = await response.text();
-      }
-      
-      if (html) {
-        // Try to extract channel name from various meta tags
-        const metaPatterns = [
-          /<meta property="og:title" content="([^"]+)"/,
-          /<meta name="twitter:title" content="([^"]+)"/,
-          /<title>([^<]+)<\/title>/,
-          /<meta property="og:site_name" content="([^"]+)"/
-        ];
-        
-        for (const pattern of metaPatterns) {
-          const match = html.match(pattern);
-          if (match && match[1]) {
-            let title = match[1].trim();
-            // Clean up the title (remove " - YouTube" suffix if present)
-            title = title.replace(/ - YouTube$/, '');
-            if (title && title !== 'YouTube') {
-              console.log('Successfully extracted channel name:', title);
-              return title;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.log(`Proxy ${proxy} failed:`, error);
-      continue;
-    }
-  }
-  
-  console.log('All proxies failed, could not fetch channel name');
+  // If we can't extract from URL, return null instead of trying CORS proxies
+  // which are often blocked or unreliable
+  console.log('Could not extract channel name from URL, manual entry required');
   return null;
 };

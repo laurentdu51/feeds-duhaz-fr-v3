@@ -33,6 +33,7 @@ interface FeedFormProps {
 
 const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProps) => {
   const [isLoadingChannelName, setIsLoadingChannelName] = useState(false);
+  const [urlWarning, setUrlWarning] = useState<string | null>(null);
   
   const form = useForm<FeedFormData>({
     defaultValues: {
@@ -64,12 +65,19 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
 
   const handleUrlChange = async (url: string) => {
     form.setValue('url', url);
+    setUrlWarning(null);
     
     // If it's a YouTube URL and we don't have a name yet, try to fetch it
     if (selectedType === 'youtube' && url && !form.getValues('name')) {
       const isYouTubeUrl = url.includes('youtube.com');
       if (isYouTubeUrl) {
         setIsLoadingChannelName(true);
+        
+        // Check if it's a custom username that might not work directly
+        if (url.includes('/@') && !url.includes('/channel/')) {
+          setUrlWarning('Note: Les URL avec @username peuvent nécessiter l\'ID de chaîne réel (UC...) pour fonctionner. Si le flux ne fonctionne pas, trouvez l\'ID de chaîne sur YouTube.');
+        }
+        
         const channelName = await fetchYouTubeChannelName(url);
         if (channelName) {
           form.setValue('name', channelName);
@@ -95,7 +103,7 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
 
   const getUrlHelperText = () => {
     if (selectedType === 'youtube') {
-      return 'Collez le lien de la chaîne YouTube (nom détecté automatiquement)';
+      return 'Pour de meilleurs résultats, utilisez l\'URL avec l\'ID de chaîne (commençant par UC...) si possible';
     }
     return null;
   };
@@ -158,6 +166,11 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
               {getUrlHelperText() && (
                 <p className="text-xs text-muted-foreground mt-1">
                   {getUrlHelperText()}
+                </p>
+              )}
+              {urlWarning && (
+                <p className="text-xs text-yellow-600 mt-1">
+                  ⚠️ {urlWarning}
                 </p>
               )}
               <FormMessage />
