@@ -80,11 +80,17 @@ export const needsChannelIdLookup = (url: string): boolean => {
 
 // Function to get instructions for finding channel ID
 export const getChannelIdInstructions = (): string => {
-  return `Pour trouver l'ID de chaîne YouTube :
-1. Allez sur la page de la chaîne
-2. Clic droit → "Afficher le code source"
-3. Cherchez "channelId":"UC..." ou regardez les liens RSS
-4. Utilisez l'URL complète : https://www.youtube.com/channel/UCxxxxx`;
+  return `Pour trouver le flux RSS d'une chaîne YouTube :
+
+Méthode recommandée :
+1. Allez sur la page de la chaîne YouTube
+2. Clic droit → "Afficher le code source" 
+3. Cherchez : <link rel="alternate" type="application/rss+xml"
+4. Copiez l'URL complète du flux RSS (https://www.youtube.com/feeds/videos.xml?channel_id=UCxxxxx)
+
+Méthode alternative :
+1. Cherchez "channelId":"UC..." dans le code source
+2. Utilisez l'URL : https://www.youtube.com/channel/UCxxxxx`;
 };
 
 // Function to fetch YouTube channel name from page metadata with fallback
