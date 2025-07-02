@@ -226,8 +226,6 @@ export function useRealArticles() {
 
       // Remove the article from the list instead of just marking it as read
       setArticles(prev => prev.filter(item => item.id !== articleId));
-      
-      toast.success("Article marqué comme lu et retiré de la liste");
     } catch (error) {
       console.error('Error marking as read:', error);
     }
