@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   convertYouTubeToRSS, 
   fetchYouTubeChannelName, 
+  fetchYouTubeRSSUrl,
   needsChannelIdLookup, 
   getChannelIdInstructions,
   isDirectRSSFeed
@@ -76,28 +77,37 @@ const FeedForm = ({ selectedType, onSubmit, onCancel, categories }: FeedFormProp
     setUrlWarning(null);
     setShowInstructions(false);
     
-    // If it's a YouTube URL and we don't have a name yet, try to fetch it
-    if (selectedType === 'youtube' && url && !form.getValues('name')) {
-      const isYouTubeUrl = url.includes('youtube.com');
-      if (isYouTubeUrl) {
-        setIsLoadingChannelName(true);
+    // If it's a YouTube URL, try to automatically fetch RSS URL and channel name
+    if (selectedType === 'youtube' && url && url.includes('youtube.com')) {
+      setIsLoadingChannelName(true);
+      
+      try {
+        // Try to automatically fetch the RSS URL and channel name
+        const result = await fetchYouTubeRSSUrl(url);
         
-        // Check if it's a direct RSS feed
-        if (isDirectRSSFeed(url)) {
+        if (result) {
+          // Update the URL field with the correct RSS URL
+          form.setValue('url', result.rssUrl);
+          
+          // Set the channel name if we don't have one yet
+          if (!form.getValues('name') && result.channelName) {
+            form.setValue('name', result.channelName);
+          }
+          
           setUrlWarning(null);
-        }
-        // Check if it's a custom username that might not work directly
-        else if (needsChannelIdLookup(url)) {
-          setUrlWarning('Cette URL pourrait ne pas fonctionner. Pour de meilleurs résultats, utilisez l\'ID de chaîne (UC...).');
+          setShowInstructions(false);
+        } else {
+          // Fallback to manual instructions if automatic detection fails
+          setUrlWarning('Impossible de détecter automatiquement le flux RSS. Veuillez utiliser les instructions ci-dessous.');
           setShowInstructions(true);
         }
-        
-        const channelName = await fetchYouTubeChannelName(url);
-        if (channelName) {
-          form.setValue('name', channelName);
-        }
-        setIsLoadingChannelName(false);
+      } catch (error) {
+        console.error('Error fetching YouTube RSS:', error);
+        setUrlWarning('Erreur lors de la détection automatique. Veuillez utiliser les instructions ci-dessous.');
+        setShowInstructions(true);
       }
+      
+      setIsLoadingChannelName(false);
     }
   };
 

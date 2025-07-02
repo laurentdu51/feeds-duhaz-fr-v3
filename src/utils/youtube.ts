@@ -93,6 +93,33 @@ Méthode alternative :
 2. Utilisez l'URL : https://www.youtube.com/channel/UCxxxxx`;
 };
 
+// Function to automatically fetch YouTube channel RSS and name
+export const fetchYouTubeRSSUrl = async (url: string): Promise<{rssUrl: string, channelName: string} | null> => {
+  try {
+    const response = await fetch(`https://wftyukugedtojizgatwj.supabase.co/functions/v1/fetch-youtube-rss`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmdHl1a3VnZWR0b2ppemdhdHdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNjIxNTEsImV4cCI6MjA2NDkzODE1MX0.KflrS6WiGksws1nO8NDm5i_Dav4u2JDSuEYtEnmKCRE`
+      },
+      body: JSON.stringify({ url })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Failed to fetch YouTube RSS:', errorData.error);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log('Successfully fetched YouTube RSS data:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching YouTube RSS:', error);
+    return null;
+  }
+};
+
 // Function to fetch YouTube channel name from page metadata with fallback
 export const fetchYouTubeChannelName = async (url: string): Promise<string | null> => {
   // First, try to extract name from URL if it's an @username format
