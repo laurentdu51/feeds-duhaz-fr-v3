@@ -114,50 +114,50 @@ const NewsCard = ({
             <p className="text-sm text-muted-foreground leading-relaxed">
               {decodeHtmlEntities(news.description)}
             </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-xs text-muted-foreground">
+            {new Date(news.publishedAt).toLocaleDateString('fr-FR', {
+              day: 'numeric',
+              month: 'long',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+          
+          <div className="flex items-center gap-2">
+            {!news.isRead && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMarkAsRead(news.id);
+                }}
+                disabled={!user}
+                className={cn("gap-1", !user && "opacity-50 cursor-not-allowed")}
+              >
+                <Eye className="h-3 w-3" />
+                Marquer lu
+              </Button>
+            )}
             
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {new Date(news.publishedAt).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'long',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </span>
-              
-              <div className="flex items-center gap-2">
-                {!news.isRead && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onMarkAsRead(news.id);
-                    }}
-                    disabled={!user}
-                    className={cn("gap-1", !user && "opacity-50 cursor-not-allowed")}
-                  >
-                    <Eye className="h-3 w-3" />
-                    Marquer lu
-                  </Button>
-                )}
-                
-                {news.url && (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="gap-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(news.url, '_blank');
-                    }}
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Lire
-                  </Button>
-                )}
-              </div>
-            </div>
+            {news.url && (
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(news.url, '_blank');
+                }}
+              >
+                <ExternalLink className="h-3 w-3" />
+                Lire
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
