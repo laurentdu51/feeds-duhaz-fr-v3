@@ -94,30 +94,7 @@ const Index = () => {
         {!user}
 
         {/* Message pour les utilisateurs connectés sans articles suivis */}
-        {user && articles.length === 0 && <Card className="mb-6 border-yellow-200 bg-yellow-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Rss className="h-5 w-5 text-yellow-600" />
-                <div className="flex-1">
-                  <p className="font-medium text-yellow-900">Aucun article non lu trouvé</p>
-                  <p className="text-sm text-yellow-700">
-                    Tous vos articles sont lus ! Ajoutez de nouveaux flux RSS ou actualisez pour voir de nouveaux articles.
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Link to="/feeds">
-                    <Button size="sm" variant="outline">
-                      Gérer les flux
-                    </Button>
-                  </Link>
-                  <Button size="sm" onClick={() => setIsAddFeedModalOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un flux
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>}
+        {user && articles.length === 0}
 
         {/* Debug info en développement */}
         {process.env.NODE_ENV === 'development'}
