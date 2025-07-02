@@ -125,7 +125,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className={`lg:col-span-1 space-y-6 ${!showFilters && 'hidden lg:block'}`}>
-            <CategoryFilter categories={categories} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} newsCount={articles.length} pinnedCount={pinnedCount} />
+            <CategoryFilter categories={categories} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} newsCount={articles.length} pinnedCount={pinnedCount} articles={articles} />
             
             <div className="bg-card border rounded-lg p-4 space-y-3">
               <h3 className="font-semibold text-sm">Statistiques</h3>

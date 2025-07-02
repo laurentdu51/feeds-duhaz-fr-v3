@@ -19,6 +19,7 @@ interface CategoryFilterProps {
   onCategoryChange: (categoryId: string | null) => void;
   newsCount: number;
   pinnedCount?: number;
+  articles: any[]; // Add articles to calculate counts per category
 }
 
 const iconMap = {
@@ -33,9 +34,15 @@ const CategoryFilter = ({
   selectedCategory, 
   onCategoryChange,
   newsCount,
-  pinnedCount = 0
+  pinnedCount = 0,
+  articles
 }: CategoryFilterProps) => {
   const { user } = useAuth();
+
+  // Calculate count for each category
+  const getCategoryCount = (categoryType: string) => {
+    return articles.filter(article => article.category === categoryType).length;
+  };
 
   return (
     <div className="bg-card border rounded-lg p-6 space-y-4">
@@ -59,6 +66,7 @@ const CategoryFilter = ({
         {categories.map((category) => {
           const IconComponent = iconMap[category.icon as keyof typeof iconMap];
           const isSelected = selectedCategory === category.id;
+          const categoryCount = getCategoryCount(category.type);
           
           return (
             <Button
@@ -69,6 +77,9 @@ const CategoryFilter = ({
             >
               <IconComponent className="h-4 w-4" />
               <span>{category.name}</span>
+              <Badge variant="secondary" className="ml-auto">
+                {categoryCount}
+              </Badge>
             </Button>
           );
         })}
