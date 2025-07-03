@@ -294,20 +294,6 @@ const FeedsManagement = () => {
 
       <main className="container mx-auto px-4 py-6">
         <div className="space-y-6">
-          {/* Auto-update notification */}
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Timer className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-900">Mise à jour automatique activée</p>
-                  <p className="text-sm text-green-700">
-                    Les flux actifs sont automatiquement mis à jour toutes les 10 minutes.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Statistiques */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -445,10 +431,16 @@ const FeedsManagement = () => {
           {/* Liste des flux avec colonne Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Flux disponibles</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Flux disponibles</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <Timer className="h-4 w-4" />
+                  <span>Mise à jour automatique activée</span>
+                </div>
+              </div>
               <CardDescription>
                 {filteredFeeds.length} flux trouvé{filteredFeeds.length !== 1 ? 's' : ''} • 
-                Mise à jour automatique toutes les 10 minutes pour les flux actifs
+                Les flux actifs sont automatiquement mis à jour toutes les 10 minutes
               </CardDescription>
             </CardHeader>
             <CardContent>
