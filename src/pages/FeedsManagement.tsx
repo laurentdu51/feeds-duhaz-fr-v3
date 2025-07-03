@@ -10,6 +10,17 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import { 
   Table,
   TableBody,
   TableCell,
@@ -33,7 +44,8 @@ import {
   RefreshCw,
   Edit,
   XCircle,
-  Timer
+  Timer,
+  Trash2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AddFeedModal from '@/components/AddFeedModal';
@@ -190,6 +202,54 @@ const FeedsManagement = () => {
     } catch (error) {
       console.error('Error toggling feed status:', error);
       toast.error('Erreur lors du changement de statut');
+    }
+  };
+
+  const handleDeleteFeed = async (feed: Feed) => {
+    if (!isSuperUser) return;
+
+    try {
+      // Supprimer d'abord tous les articles liés au flux
+      const { error: articlesError } = await supabase
+        .from('articles')
+        .delete()
+        .eq('feed_id', feed.id);
+
+      if (articlesError) {
+        console.error('Error deleting articles:', articlesError);
+        toast.error('Erreur lors de la suppression des articles');
+        return;
+      }
+
+      // Supprimer toutes les relations user_feeds
+      const { error: userFeedsError } = await supabase
+        .from('user_feeds')
+        .delete()
+        .eq('feed_id', feed.id);
+
+      if (userFeedsError) {
+        console.error('Error deleting user feeds relations:', userFeedsError);
+        toast.error('Erreur lors de la suppression des relations utilisateur');
+        return;
+      }
+
+      // Enfin, supprimer le flux lui-même
+      const { error: feedError } = await supabase
+        .from('feeds')
+        .delete()
+        .eq('id', feed.id);
+
+      if (feedError) {
+        console.error('Error deleting feed:', feedError);
+        toast.error('Erreur lors de la suppression du flux');
+        return;
+      }
+
+      toast.success('Flux supprimé avec succès');
+      await refetch();
+    } catch (error) {
+      console.error('Error deleting feed:', error);
+      toast.error('Erreur lors de la suppression du flux');
     }
   };
 
@@ -554,6 +614,36 @@ const FeedsManagement = () => {
                                     <XCircle className="h-4 w-4" />
                                     {feed.status === 'active' ? 'Désactiver' : 'Activer'}
                                   </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        className="gap-2"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                        Supprimer
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Êtes-vous sûr de vouloir supprimer le flux "{feed.name}" ? 
+                                          Cette action est irréversible et supprimera également tous les articles associés.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleDeleteFeed(feed)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Supprimer définitivement
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 </>
                               )}
                             </div>
