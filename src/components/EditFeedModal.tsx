@@ -6,17 +6,32 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import { XCircle, Trash2 } from 'lucide-react';
 import { Feed } from '@/types/feed';
 
 interface EditFeedModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (feedData: any) => void;
+  onToggleStatus?: (feed: Feed) => void;
+  onDelete?: (feed: Feed) => void;
   feed: Feed;
   feedTypes: { value: string; label: string; icon: any }[];
+  isSuperUser?: boolean;
 }
 
-const EditFeedModal = ({ isOpen, onClose, onSave, feed, feedTypes }: EditFeedModalProps) => {
+const EditFeedModal = ({ isOpen, onClose, onSave, onToggleStatus, onDelete, feed, feedTypes, isSuperUser = false }: EditFeedModalProps) => {
   const [name, setName] = useState(feed.name);
   const [url, setUrl] = useState(feed.url);
   const [type, setType] = useState(feed.type);
@@ -138,6 +153,63 @@ const EditFeedModal = ({ isOpen, onClose, onSave, feed, feedTypes }: EditFeedMod
               </Select>
             </div>
           </div>
+          
+          {/* Actions Super Admin */}
+          {isSuperUser && (
+            <div className="border-t pt-4">
+              <div className="flex flex-col gap-2">
+                <h4 className="text-sm font-medium text-muted-foreground">Actions administrateur</h4>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={feed.status === 'active' ? 'destructive' : 'default'}
+                    size="sm"
+                    onClick={() => onToggleStatus?.(feed)}
+                    className="gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    {feed.status === 'active' ? 'Désactiver' : 'Activer'}
+                  </Button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Supprimer
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Êtes-vous sûr de vouloir supprimer le flux "{feed.name}" ? 
+                          Cette action est irréversible et supprimera également tous les articles associés.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => {
+                            onDelete?.(feed);
+                            onClose();
+                          }}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Supprimer définitivement
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Annuler

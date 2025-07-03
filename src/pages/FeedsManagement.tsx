@@ -10,17 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
-} from '@/components/ui/alert-dialog';
-import { 
   Table,
   TableBody,
   TableCell,
@@ -43,9 +32,7 @@ import {
   User,
   RefreshCw,
   Edit,
-  XCircle,
-  Timer,
-  Trash2
+  Timer
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AddFeedModal from '@/components/AddFeedModal';
@@ -595,56 +582,15 @@ const FeedsManagement = () => {
                               </Button>
                               
                               {user && isSuperUser && (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleEditFeed(feed)}
-                                    className="gap-2"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                    Modifier
-                                  </Button>
-                                  <Button
-                                    variant={feed.status === 'active' ? 'destructive' : 'default'}
-                                    size="sm"
-                                    onClick={() => handleToggleStatus(feed)}
-                                    className="gap-2"
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                    {feed.status === 'active' ? 'Désactiver' : 'Activer'}
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        className="gap-2"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                        Supprimer
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Êtes-vous sûr de vouloir supprimer le flux "{feed.name}" ? 
-                                          Cette action est irréversible et supprimera également tous les articles associés.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() => handleDeleteFeed(feed)}
-                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                        >
-                                          Supprimer définitivement
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditFeed(feed)}
+                                  className="gap-2"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                  Modifier
+                                </Button>
                               )}
                             </div>
                           </TableCell>
@@ -673,8 +619,11 @@ const FeedsManagement = () => {
           isOpen={isEditFeedModalOpen}
           onClose={() => setIsEditFeedModalOpen(false)}
           onSave={handleSaveEdit}
+          onToggleStatus={handleToggleStatus}
+          onDelete={handleDeleteFeed}
           feed={selectedFeed}
           feedTypes={feedTypes}
+          isSuperUser={isSuperUser}
         />
       )}
     </div>
