@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { categories } from '@/data/mockNews';
 import { useRealArticles } from '@/hooks/useRealArticles';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { NewsItem } from '@/types/news';
 import Header from '@/components/Header';
 import CategoryFilter from '@/components/CategoryFilter';
@@ -11,6 +12,7 @@ import ArticleModal from '@/components/ArticleModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { RefreshCw, Filter, User, Rss, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
@@ -26,6 +28,7 @@ const Index = () => {
     deleteArticle,
     refetch
   } = useRealArticles();
+  const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
@@ -100,27 +103,29 @@ const Index = () => {
         {process.env.NODE_ENV === 'development'}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className={`lg:col-span-1 space-y-6 ${!showFilters && 'hidden lg:block'}`}>
-            <CategoryFilter categories={categories} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} newsCount={articles.length} pinnedCount={pinnedCount} articles={articles} />
-            
-            <div className="bg-card border rounded-lg p-4 space-y-3">
-              <h3 className="font-semibold text-sm">Statistiques</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Articles non lus</span>
-                  <Badge variant="outline">{articles.length}</Badge>
+          {/* Sidebar - Desktop only */}
+          {!isMobile && (
+            <div className={`lg:col-span-1 space-y-6 ${!showFilters && 'hidden lg:block'}`}>
+              <CategoryFilter categories={categories} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} newsCount={articles.length} pinnedCount={pinnedCount} articles={articles} />
+              
+              <div className="bg-card border rounded-lg p-4 space-y-3">
+                <h3 className="font-semibold text-sm">Statistiques</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Articles non lus</span>
+                    <Badge variant="outline">{articles.length}</Badge>
+                  </div>
+                  {user && <div className="flex justify-between">
+                      <span className="text-muted-foreground">Épinglés</span>
+                      <Badge variant="secondary">{pinnedCount}</Badge>
+                    </div>}
                 </div>
-                {user && <div className="flex justify-between">
-                    <span className="text-muted-foreground">Épinglés</span>
-                    <Badge variant="secondary">{pinnedCount}</Badge>
-                  </div>}
               </div>
             </div>
-          </div>
+          )}
           
           {/* Main content */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className={`${isMobile ? 'col-span-1' : 'lg:col-span-3'} space-y-6`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-bold">
@@ -130,10 +135,44 @@ const Index = () => {
               </div>
               
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="lg:hidden gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filtres
-                </Button>
+                {/* Mobile Filter Drawer */}
+                {isMobile && (
+                  <Drawer>
+                    <DrawerTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Filter className="h-4 w-4" />
+                        Filtres
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                      <div className="p-4 space-y-6">
+                        <CategoryFilter categories={categories} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} newsCount={articles.length} pinnedCount={pinnedCount} articles={articles} />
+                        
+                        <div className="bg-card border rounded-lg p-4 space-y-3">
+                          <h3 className="font-semibold text-sm">Statistiques</h3>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Articles non lus</span>
+                              <Badge variant="outline">{articles.length}</Badge>
+                            </div>
+                            {user && <div className="flex justify-between">
+                                <span className="text-muted-foreground">Épinglés</span>
+                                <Badge variant="secondary">{pinnedCount}</Badge>
+                              </div>}
+                          </div>
+                        </div>
+                      </div>
+                    </DrawerContent>
+                  </Drawer>
+                )}
+                
+                {/* Desktop Filter Toggle - keep existing logic */}
+                {!isMobile && (
+                  <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="lg:hidden gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filtres
+                  </Button>
+                )}
                 
                 <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
                   <RefreshCw className="h-4 w-4" />
