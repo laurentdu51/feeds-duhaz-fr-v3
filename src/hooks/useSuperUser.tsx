@@ -16,7 +16,9 @@ export function useSuperUser() {
     }
 
     try {
-      const { data, error } = await supabase.rpc('is_super_user');
+      const { data, error } = await supabase.rpc('is_super_user', { 
+        user_email: user.email 
+      });
       
       if (error) {
         console.error('Error checking super user status:', error);
