@@ -45,6 +45,15 @@ const FeedsManagement = () => {
   const { updateFeed, updating } = useFeedUpdate();
   const { user, signOut } = useAuth();
   const { isSuperUser, loading: superUserLoading } = useSuperUser();
+
+  // DEBUG: Log super user status
+  console.log('🔍 FeedsManagement Debug:', {
+    user: !!user,
+    userEmail: user?.email,
+    isSuperUser,
+    superUserLoading,
+    canShowEditButton: user && isSuperUser
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isAddFeedModalOpen, setIsAddFeedModalOpen] = useState(false);
