@@ -46,6 +46,17 @@ const NewsCard = ({
     }
   };
 
+  const getYouTubeVideoId = (url: string) => {
+    const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  };
+
+  const getYouTubeThumbnail = (url: string) => {
+    const videoId = getYouTubeVideoId(url);
+    return videoId ? `http://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+  };
+
   const handleCardClick = () => {
     onOpenArticle(news);
     if (!news.isRead) {
@@ -100,7 +111,22 @@ const NewsCard = ({
       
       <CardContent className="space-y-4" onClick={handleCardClick}>
         <div className="flex gap-3">
-          {news.imageUrl && (
+          {news.category === 'youtube' && news.url ? (
+            // Pour YouTube, afficher la miniature au lieu de la description
+            <div className="flex-shrink-0">
+              <img
+                src={getYouTubeThumbnail(news.url) || news.imageUrl}
+                alt={news.title}
+                className="w-32 h-18 object-cover rounded-md"
+                onError={(e) => {
+                  // Fallback vers l'image normale ou une image par défaut
+                  if (news.imageUrl) {
+                    e.currentTarget.src = news.imageUrl;
+                  }
+                }}
+              />
+            </div>
+          ) : news.imageUrl ? (
             <div className="flex-shrink-0">
               <img
                 src={news.imageUrl}
@@ -108,13 +134,15 @@ const NewsCard = ({
                 className="w-16 h-16 object-cover rounded-md"
               />
             </div>
-          )}
+          ) : null}
           
-          <div className="flex-1 space-y-4">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {decodeHtmlEntities(news.description)}
-            </p>
-          </div>
+          {news.category !== 'youtube' && (
+            <div className="flex-1 space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {decodeHtmlEntities(news.description)}
+              </p>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center justify-between pt-2">
