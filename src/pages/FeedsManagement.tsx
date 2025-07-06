@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFeeds } from '@/hooks/useFeeds';
 import { useFeedUpdate } from '@/hooks/useFeedUpdate';
 import { useAuth } from '@/hooks/useAuth';
@@ -46,19 +46,20 @@ const FeedsManagement = () => {
   const { user, signOut } = useAuth();
   const { isSuperUser, loading: superUserLoading } = useSuperUser();
 
-  // DEBUG: Log super user status
-  console.log('🔍 FeedsManagement Debug:', {
-    user: !!user,
-    userEmail: user?.email,
-    isSuperUser,
-    superUserLoading,
-    canShowEditButton: user && isSuperUser
-  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isAddFeedModalOpen, setIsAddFeedModalOpen] = useState(false);
   const [isEditFeedModalOpen, setIsEditFeedModalOpen] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
+  const [renderKey, setRenderKey] = useState(0);
+
+  // Stable computed value for super admin buttons visibility
+  const showSuperAdminButtons = user && isSuperUser && !superUserLoading;
+
+  // Force re-render when super user status changes
+  useEffect(() => {
+    setRenderKey(prev => prev + 1);
+  }, [isSuperUser, user]);
 
   const handleUpdateFeed = async (feed: Feed) => {
     try {
@@ -513,99 +514,99 @@ const FeedsManagement = () => {
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {filteredFeeds.map((feed) => {
-                      const TypeIcon = getTypeIcon(feed.type);
-                      const StatusIcon = getStatusIcon(feed.status);
-                      
-                      return (
-                        <TableRow key={feed.id}>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <div className="font-medium">{feed.name}</div>
-                                {feed.status === 'active' && (
-                                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                                    <Timer className="h-3 w-3 mr-1" />
-                                    Auto
-                                  </Badge>
-                                )}
-                              </div>
-                              {feed.description && (
-                                <div className="text-sm text-muted-foreground">
-                                  {feed.description}
-                                </div>
-                              )}
-                              <div className="text-xs text-muted-foreground">
-                                {feed.url}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <TypeIcon className="h-4 w-4" />
-                              <Badge variant="outline">
-                                {feedTypes.find(t => t.value === feed.type)?.label}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <StatusIcon className={`h-4 w-4 ${getStatusColor(feed.status)}`} />
-                              <span className="capitalize">{feed.status}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{feed.articleCount}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {new Date(feed.lastUpdated).toLocaleDateString('fr-FR', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          </TableCell>
-                          {user && (
-                            <TableCell>
-                              <Switch
-                                checked={feed.isFollowed}
-                                onCheckedChange={() => toggleFollow(feed.id)}
-                              />
-                            </TableCell>
-                          )}
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateFeed(feed)}
-                                disabled={updating === feed.id}
-                                className="gap-2"
-                              >
-                                <RefreshCw className={`h-4 w-4 ${updating === feed.id ? 'animate-spin' : ''}`} />
-                                {updating === feed.id ? 'Mise à jour...' : 'Actualiser'}
-                              </Button>
-                              
-                              {user && isSuperUser && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEditFeed(feed)}
-                                  className="gap-2"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                  Modifier
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                   <TableBody key={renderKey}>
+                     {filteredFeeds.map((feed) => {
+                       const TypeIcon = getTypeIcon(feed.type);
+                       const StatusIcon = getStatusIcon(feed.status);
+                       
+                       return (
+                         <TableRow key={feed.id}>
+                           <TableCell>
+                             <div className="space-y-1">
+                               <div className="flex items-center gap-2">
+                                 <div className="font-medium">{feed.name}</div>
+                                 {feed.status === 'active' && (
+                                   <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                     <Timer className="h-3 w-3 mr-1" />
+                                     Auto
+                                   </Badge>
+                                 )}
+                               </div>
+                               {feed.description && (
+                                 <div className="text-sm text-muted-foreground">
+                                   {feed.description}
+                                 </div>
+                               )}
+                               <div className="text-xs text-muted-foreground">
+                                 {feed.url}
+                               </div>
+                             </div>
+                           </TableCell>
+                           <TableCell>
+                             <div className="flex items-center gap-2">
+                               <TypeIcon className="h-4 w-4" />
+                               <Badge variant="outline">
+                                 {feedTypes.find(t => t.value === feed.type)?.label}
+                               </Badge>
+                             </div>
+                           </TableCell>
+                           <TableCell>
+                             <div className="flex items-center gap-2">
+                               <StatusIcon className={`h-4 w-4 ${getStatusColor(feed.status)}`} />
+                               <span className="capitalize">{feed.status}</span>
+                             </div>
+                           </TableCell>
+                           <TableCell>
+                             <Badge variant="secondary">{feed.articleCount}</Badge>
+                           </TableCell>
+                           <TableCell>
+                             <div className="text-sm">
+                               {new Date(feed.lastUpdated).toLocaleDateString('fr-FR', {
+                                 day: '2-digit',
+                                 month: '2-digit',
+                                 year: 'numeric',
+                                 hour: '2-digit',
+                                 minute: '2-digit'
+                               })}
+                             </div>
+                           </TableCell>
+                           {user && (
+                             <TableCell>
+                               <Switch
+                                 checked={feed.isFollowed}
+                                 onCheckedChange={() => toggleFollow(feed.id)}
+                               />
+                             </TableCell>
+                           )}
+                           <TableCell>
+                             <div className="flex gap-2">
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => handleUpdateFeed(feed)}
+                                 disabled={updating === feed.id}
+                                 className="gap-2"
+                               >
+                                 <RefreshCw className={`h-4 w-4 ${updating === feed.id ? 'animate-spin' : ''}`} />
+                                 {updating === feed.id ? 'Mise à jour...' : 'Actualiser'}
+                               </Button>
+                               
+                               {showSuperAdminButtons && (
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={() => handleEditFeed(feed)}
+                                   className="gap-2"
+                                 >
+                                   <Edit className="h-4 w-4" />
+                                   Modifier
+                                 </Button>
+                               )}
+                             </div>
+                           </TableCell>
+                         </TableRow>
+                       );
+                     })}
                   </TableBody>
                 </Table>
               </div>
