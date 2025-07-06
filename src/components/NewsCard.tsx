@@ -110,14 +110,14 @@ const NewsCard = ({
       </CardHeader>
       
       <CardContent className="space-y-4" onClick={handleCardClick}>
-        <div className="flex gap-3">
+        <div className="space-y-3">
           {news.category === 'youtube' && news.url ? (
-            // Pour YouTube, afficher la miniature au lieu de la description
-            <div className="flex-shrink-0">
+            // Pour YouTube, afficher la miniature en pleine largeur
+            <div className="w-full">
               <img
                 src={getYouTubeThumbnail(news.url) || news.imageUrl}
                 alt={news.title}
-                className="w-32 h-18 object-cover rounded-md"
+                className="w-full h-48 object-cover rounded-md"
                 onError={(e) => {
                   // Fallback vers l'image normale ou une image par défaut
                   if (news.imageUrl) {
@@ -127,17 +127,17 @@ const NewsCard = ({
               />
             </div>
           ) : news.imageUrl ? (
-            <div className="flex-shrink-0">
+            <div className="w-full">
               <img
                 src={news.imageUrl}
                 alt={news.title}
-                className="w-16 h-16 object-cover rounded-md"
+                className="w-full h-48 object-cover rounded-md"
               />
             </div>
           ) : null}
           
           {news.category !== 'youtube' && (
-            <div className="flex-1 space-y-4">
+            <div className="space-y-4">
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {decodeHtmlEntities(news.description)}
               </p>
