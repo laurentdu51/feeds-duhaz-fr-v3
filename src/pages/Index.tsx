@@ -94,13 +94,28 @@ const Index = () => {
       
       <main className="container mx-auto px-4 py-6">
         {/* Message pour les utilisateurs non connectés */}
-        {!user}
+        {!user && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-800">
+              Vous consultez les articles en mode visiteur. 
+              <Link to="/auth" className="font-semibold text-blue-600 hover:text-blue-800 ml-1">
+                Connectez-vous
+              </Link> pour gérer vos flux et marquer vos articles préférés.
+            </p>
+          </div>
+        )}
 
         {/* Message pour les utilisateurs connectés sans articles suivis */}
-        {user && articles.length === 0}
-
-        {/* Debug info en développement */}
-        {process.env.NODE_ENV === 'development'}
+        {user && articles.length === 0 && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-amber-800">
+              Vous ne suivez aucun flux RSS pour le moment. 
+              <Link to="/feeds" className="font-semibold text-amber-600 hover:text-amber-800 ml-1">
+                Ajoutez des flux
+              </Link> pour commencer à voir des articles.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar - Desktop only */}
