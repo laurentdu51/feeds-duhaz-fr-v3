@@ -121,9 +121,8 @@ export function useRealArticles() {
           .from('articles')
           .select(`
             *,
-            feeds(name, category)
+            feeds!inner(name, category)
           `)
-          .not('feeds', 'is', null)
           .order('published_at', { ascending: false })
           .limit(20);
 
