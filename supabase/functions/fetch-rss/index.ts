@@ -167,12 +167,23 @@ serve(async (req) => {
       throw insertError
     }
 
-    // Update feed's last_fetched_at
+    // Get current article count for this feed
+    const { count: currentArticleCount, error: countError } = await supabaseClient
+      .from('articles')
+      .select('*', { count: 'exact', head: true })
+      .eq('feed_id', feedId)
+
+    if (countError) {
+      console.error('Error counting articles:', countError)
+    }
+
+    // Update feed's last_fetched_at and article_count
     const { error: updateError } = await supabaseClient
       .from('feeds')
       .update({ 
         last_fetched_at: new Date().toISOString(),
-        status: 'active'
+        status: 'active',
+        article_count: currentArticleCount || 0
       })
       .eq('id', feedId)
 
