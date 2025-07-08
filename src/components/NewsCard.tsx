@@ -54,7 +54,7 @@ const NewsCard = ({
 
   const getYouTubeThumbnail = (url: string) => {
     const videoId = getYouTubeVideoId(url);
-    return videoId ? `http://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
   };
 
   const handleCardClick = () => {
