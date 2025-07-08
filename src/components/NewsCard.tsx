@@ -156,7 +156,7 @@ const NewsCard = ({
           </span>
           
           <div className="flex items-center gap-2">
-            {!news.isRead && (
+            {!news.isRead && user && (
               <Button
                 variant="outline"
                 size="sm"
@@ -164,8 +164,7 @@ const NewsCard = ({
                   e.stopPropagation();
                   onMarkAsRead(news.id);
                 }}
-                disabled={!user}
-                className={cn("gap-1", !user && "opacity-50 cursor-not-allowed")}
+                className="gap-1"
               >
                 <Eye className="h-3 w-3" />
                 Marquer lu
