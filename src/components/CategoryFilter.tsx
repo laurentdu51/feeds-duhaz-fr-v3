@@ -11,7 +11,8 @@ import {
   Filter,
   Pin,
   Calendar,
-  Clock
+  Clock,
+  Heart
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -24,6 +25,8 @@ interface CategoryFilterProps {
   articles: any[]; // Add articles to calculate counts per category
   dateFilter?: 'today' | 'yesterday' | null;
   onDateFilterChange?: (filter: 'today' | 'yesterday' | null) => void;
+  showFollowedOnly?: boolean;
+  onShowFollowedOnlyChange?: (showFollowedOnly: boolean) => void;
 }
 
 const iconMap = {
@@ -41,7 +44,9 @@ const CategoryFilter = ({
   pinnedCount = 0,
   articles,
   dateFilter,
-  onDateFilterChange
+  onDateFilterChange,
+  showFollowedOnly,
+  onShowFollowedOnlyChange
 }: CategoryFilterProps) => {
   const { user } = useAuth();
 
@@ -90,6 +95,36 @@ const CategoryFilter = ({
           );
         })}
       </div>
+      
+      {user && onShowFollowedOnlyChange && (
+        <div className="pt-4 border-t space-y-2">
+          <div className="flex items-center gap-2">
+            <Heart className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Affichage</span>
+          </div>
+          
+          <div className="space-y-1">
+            <Button
+              variant={!showFollowedOnly ? "default" : "outline"}
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => onShowFollowedOnlyChange(false)}
+            >
+              <span>Tous les flux</span>
+            </Button>
+            
+            <Button
+              variant={showFollowedOnly ? "default" : "outline"}
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => onShowFollowedOnlyChange(true)}
+            >
+              <Heart className="h-3 w-3" />
+              <span>Flux suivis uniquement</span>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {onDateFilterChange && (
         <div className="pt-4 border-t space-y-2">

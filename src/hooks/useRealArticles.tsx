@@ -5,7 +5,7 @@ import { useAuth } from './useAuth';
 import { NewsItem } from '@/types/news';
 import { toast } from 'sonner';
 
-export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null) {
+export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showFollowedOnly?: boolean) {
   const [articles, setArticles] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -13,7 +13,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null) {
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching articles...', { user: !!user, dateFilter });
+      console.log('🔄 Fetching articles...', { user: !!user, dateFilter, showFollowedOnly });
       
       // Calculate date ranges for filtering
       let dateStart = null;
@@ -34,7 +34,76 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null) {
         dateEnd = yesterday.toISOString();
       }
       
-      if (user) {
+      if (user && showFollowedOnly) {
+        // For authenticated users wanting only followed feeds
+        const { data: userFeeds, error: userFeedsError } = await supabase
+          .from('user_feeds')
+          .select('feed_id')
+          .eq('user_id', user.id)
+          .eq('is_followed', true);
+
+        if (userFeedsError) {
+          console.error('❌ Error fetching user feeds:', userFeedsError);
+          toast.error('Erreur lors du chargement de vos flux');
+          return;
+        }
+
+        console.log('📋 User followed feeds:', userFeeds);
+        const followedFeedIds = userFeeds?.map(uf => uf.feed_id) || [];
+        
+        if (followedFeedIds.length === 0) {
+          console.log('⚠️ No followed feeds found for user');
+          setArticles([]);
+          return;
+        }
+
+        // Fetch articles from followed feeds with user interactions, excluding read articles
+        let query = supabase
+          .from('articles')
+          .select(`
+            *,
+            feeds!inner(name, category),
+            user_articles(is_read, is_pinned)
+          `)
+          .in('feed_id', followedFeedIds);
+        
+        // Apply date filter if specified
+        if (dateStart && dateEnd) {
+          query = query.gte('published_at', dateStart).lte('published_at', dateEnd);
+        }
+        
+        const { data: articlesData, error: articlesError } = await query
+          .order('published_at', { ascending: false })
+          .limit(100);
+
+        if (articlesError) {
+          console.error('❌ Error fetching articles:', articlesError);
+          toast.error('Erreur lors du chargement des articles');
+          return;
+        }
+
+        console.log('📰 Articles found for followed feeds:', articlesData?.length);
+
+        // Transform to NewsItem format and filter out read articles
+        const transformedArticles: NewsItem[] = articlesData
+          ?.filter(article => !article.user_articles[0]?.is_read) // Filter out read articles
+          ?.map(article => ({
+            id: article.id,
+            title: article.title,
+            description: article.description || '',
+            content: article.content || '',
+            source: article.feeds.name,
+            category: article.feeds.category as NewsItem['category'],
+            publishedAt: article.published_at,
+            readTime: article.read_time || 5,
+            isPinned: article.user_articles[0]?.is_pinned || false,
+            isRead: article.user_articles[0]?.is_read || false,
+            url: article.url || undefined,
+            imageUrl: article.image_url || undefined
+          })) || [];
+
+        setArticles(transformedArticles);
+      } else if (user) {
         // For authenticated users, fetch articles from their followed feeds
         const { data: userFeeds, error: userFeedsError } = await supabase
           .from('user_feeds')
@@ -148,8 +217,8 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null) {
 
         setArticles(transformedArticles);
       } else {
-        // For visitors, show recent articles from all feeds
-        console.log('👤 Loading articles for visitor');
+        // For visitors or users wanting all articles, show recent articles from all feeds
+        console.log('👤 Loading articles for visitor or all articles');
         let query = supabase
           .from('articles')
           .select(`
@@ -164,7 +233,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null) {
         
         const { data: articlesData, error: articlesError } = await query
           .order('published_at', { ascending: false })
-          .limit(20);
+          .limit(50);
 
         if (articlesError) {
           console.error('❌ Error fetching public articles:', articlesError);
@@ -323,7 +392,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null) {
 
   useEffect(() => {
     fetchArticles();
-  }, [user, dateFilter]);
+  }, [user, dateFilter, showFollowedOnly]);
 
   return {
     articles,

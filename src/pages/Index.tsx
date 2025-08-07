@@ -21,6 +21,7 @@ const Index = () => {
     user
   } = useAuth();
   const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | null>(null);
+  const [showFollowedOnly, setShowFollowedOnly] = useState(false);
   const {
     articles,
     loading,
@@ -28,7 +29,7 @@ const Index = () => {
     markAsRead,
     deleteArticle,
     refetch
-  } = useRealArticles(dateFilter);
+  } = useRealArticles(dateFilter, showFollowedOnly);
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -131,6 +132,8 @@ const Index = () => {
                 articles={articles}
                 dateFilter={dateFilter}
                 onDateFilterChange={setDateFilter}
+                showFollowedOnly={showFollowedOnly}
+                onShowFollowedOnlyChange={setShowFollowedOnly}
               />
               
               <div className="bg-card border rounded-lg p-4 space-y-3">
@@ -180,6 +183,8 @@ const Index = () => {
                           articles={articles}
                           dateFilter={dateFilter}
                           onDateFilterChange={setDateFilter}
+                          showFollowedOnly={showFollowedOnly}
+                          onShowFollowedOnlyChange={setShowFollowedOnly}
                         />
                         
                         <div className="bg-card border rounded-lg p-4 space-y-3">
