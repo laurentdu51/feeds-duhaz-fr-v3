@@ -43,6 +43,29 @@ function extractAttribute(xml: string, tagName: string, attributeName: string): 
   return match ? match[1] : '';
 }
 
+// Helper function to extract YouTube video ID from URL
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/.*[?&]v=([a-zA-Z0-9_-]{11})/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return null;
+}
+
+// Helper function to generate YouTube thumbnail URL
+function generateYouTubeThumbnail(videoUrl: string): string | null {
+  const videoId = getYouTubeVideoId(videoUrl);
+  return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -102,6 +125,14 @@ serve(async (req) => {
         const imgMatch = description.match(/src=["']([^"']*\.(jpg|jpeg|png|gif|webp))[^"']*/i);
         if (imgMatch) {
           image = imgMatch[1];
+        }
+      }
+      
+      // Generate YouTube thumbnail if this is a YouTube link and no image found
+      if (!image && link) {
+        const youtubeImage = generateYouTubeThumbnail(link);
+        if (youtubeImage) {
+          image = youtubeImage;
         }
       }
 
