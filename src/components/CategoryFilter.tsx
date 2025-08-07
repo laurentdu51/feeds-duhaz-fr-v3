@@ -9,7 +9,9 @@ import {
   Gamepad2, 
   Newspaper,
   Filter,
-  Pin
+  Pin,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -20,6 +22,8 @@ interface CategoryFilterProps {
   newsCount: number;
   pinnedCount?: number;
   articles: any[]; // Add articles to calculate counts per category
+  dateFilter?: 'today' | 'yesterday' | null;
+  onDateFilterChange?: (filter: 'today' | 'yesterday' | null) => void;
 }
 
 const iconMap = {
@@ -35,7 +39,9 @@ const CategoryFilter = ({
   onCategoryChange,
   newsCount,
   pinnedCount = 0,
-  articles
+  articles,
+  dateFilter,
+  onDateFilterChange
 }: CategoryFilterProps) => {
   const { user } = useAuth();
 
@@ -84,6 +90,46 @@ const CategoryFilter = ({
           );
         })}
       </div>
+
+      {onDateFilterChange && (
+        <div className="pt-4 border-t space-y-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filtrer par date</span>
+          </div>
+          
+          <div className="space-y-1">
+            <Button
+              variant={dateFilter === null ? "default" : "outline"}
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => onDateFilterChange(null)}
+            >
+              <span>Tous les articles</span>
+            </Button>
+            
+            <Button
+              variant={dateFilter === 'today' ? "default" : "outline"}
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => onDateFilterChange('today')}
+            >
+              <Clock className="h-3 w-3" />
+              <span>Aujourd'hui</span>
+            </Button>
+            
+            <Button
+              variant={dateFilter === 'yesterday' ? "default" : "outline"}
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => onDateFilterChange('yesterday')}
+            >
+              <Calendar className="h-3 w-3" />
+              <span>Hier</span>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {user && (
         <div className="pt-4 border-t">

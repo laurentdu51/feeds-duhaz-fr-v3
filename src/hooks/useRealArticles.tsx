@@ -5,7 +5,7 @@ import { useAuth } from './useAuth';
 import { NewsItem } from '@/types/news';
 import { toast } from 'sonner';
 
-export function useRealArticles() {
+export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null) {
   const [articles, setArticles] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -13,7 +13,26 @@ export function useRealArticles() {
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching articles...', { user: !!user });
+      console.log('🔄 Fetching articles...', { user: !!user, dateFilter });
+      
+      // Calculate date ranges for filtering
+      let dateStart = null;
+      let dateEnd = null;
+      
+      if (dateFilter === 'today') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dateStart = today.toISOString();
+        today.setHours(23, 59, 59, 999);
+        dateEnd = today.toISOString();
+      } else if (dateFilter === 'yesterday') {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        dateStart = yesterday.toISOString();
+        yesterday.setHours(23, 59, 59, 999);
+        dateEnd = yesterday.toISOString();
+      }
       
       if (user) {
         // For authenticated users, fetch articles from their followed feeds
@@ -35,13 +54,20 @@ export function useRealArticles() {
         if (followedFeedIds.length === 0) {
           console.log('⚠️ No followed feeds found for user');
           // Si l'utilisateur ne suit aucun flux, on affiche les articles récents non lus
-          const { data: recentArticles, error: recentError } = await supabase
+          let query = supabase
             .from('articles')
             .select(`
               *,
               feeds!inner(name, category),
               user_articles(is_read, is_pinned)
-            `)
+            `);
+          
+          // Apply date filter if specified
+          if (dateStart && dateEnd) {
+            query = query.gte('published_at', dateStart).lte('published_at', dateEnd);
+          }
+          
+          const { data: recentArticles, error: recentError } = await query
             .order('published_at', { ascending: false })
             .limit(20);
 
@@ -76,14 +102,21 @@ export function useRealArticles() {
         }
 
         // Fetch articles from followed feeds with user interactions, excluding read articles
-        const { data: articlesData, error: articlesError } = await supabase
+        let query = supabase
           .from('articles')
           .select(`
             *,
             feeds!inner(name, category),
             user_articles(is_read, is_pinned)
           `)
-          .in('feed_id', followedFeedIds)
+          .in('feed_id', followedFeedIds);
+        
+        // Apply date filter if specified
+        if (dateStart && dateEnd) {
+          query = query.gte('published_at', dateStart).lte('published_at', dateEnd);
+        }
+        
+        const { data: articlesData, error: articlesError } = await query
           .order('published_at', { ascending: false })
           .limit(100);
 
@@ -117,12 +150,19 @@ export function useRealArticles() {
       } else {
         // For visitors, show recent articles from all feeds
         console.log('👤 Loading articles for visitor');
-        const { data: articlesData, error: articlesError } = await supabase
+        let query = supabase
           .from('articles')
           .select(`
             *,
             feeds!inner(name, category)
-          `)
+          `);
+        
+        // Apply date filter if specified
+        if (dateStart && dateEnd) {
+          query = query.gte('published_at', dateStart).lte('published_at', dateEnd);
+        }
+        
+        const { data: articlesData, error: articlesError } = await query
           .order('published_at', { ascending: false })
           .limit(20);
 
@@ -283,7 +323,7 @@ export function useRealArticles() {
 
   useEffect(() => {
     fetchArticles();
-  }, [user]);
+  }, [user, dateFilter]);
 
   return {
     articles,

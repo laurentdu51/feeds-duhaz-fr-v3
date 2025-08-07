@@ -20,6 +20,7 @@ const Index = () => {
   const {
     user
   } = useAuth();
+  const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | null>(null);
   const {
     articles,
     loading,
@@ -27,7 +28,7 @@ const Index = () => {
     markAsRead,
     deleteArticle,
     refetch
-  } = useRealArticles();
+  } = useRealArticles(dateFilter);
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -121,7 +122,16 @@ const Index = () => {
           {/* Sidebar - Desktop only */}
           {!isMobile && (
             <div className={`lg:col-span-1 space-y-6 ${!showFilters && 'hidden lg:block'}`}>
-              <CategoryFilter categories={categories} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} newsCount={articles.length} pinnedCount={pinnedCount} articles={articles} />
+              <CategoryFilter 
+                categories={categories} 
+                selectedCategory={selectedCategory} 
+                onCategoryChange={setSelectedCategory} 
+                newsCount={articles.length} 
+                pinnedCount={pinnedCount} 
+                articles={articles}
+                dateFilter={dateFilter}
+                onDateFilterChange={setDateFilter}
+              />
               
               <div className="bg-card border rounded-lg p-4 space-y-3">
                 <h3 className="font-semibold text-sm">Statistiques</h3>
@@ -161,7 +171,16 @@ const Index = () => {
                     </DrawerTrigger>
                     <DrawerContent>
                       <div className="p-4 space-y-6">
-                        <CategoryFilter categories={categories} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} newsCount={articles.length} pinnedCount={pinnedCount} articles={articles} />
+                        <CategoryFilter 
+                          categories={categories} 
+                          selectedCategory={selectedCategory} 
+                          onCategoryChange={setSelectedCategory} 
+                          newsCount={articles.length} 
+                          pinnedCount={pinnedCount} 
+                          articles={articles}
+                          dateFilter={dateFilter}
+                          onDateFilterChange={setDateFilter}
+                        />
                         
                         <div className="bg-card border rounded-lg p-4 space-y-3">
                           <h3 className="font-semibold text-sm">Statistiques</h3>
