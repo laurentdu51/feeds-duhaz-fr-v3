@@ -96,87 +96,80 @@ const CategoryFilter = ({
         })}
       </div>
       
-      {user && onShowFollowedOnlyChange && (
-        <div className="pt-4 border-t space-y-2">
-          <div className="flex items-center gap-2">
-            <Heart className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Affichage</span>
-          </div>
-          
-          <div className="space-y-1">
-            <Button
-              variant={!showFollowedOnly ? "default" : "outline"}
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={() => onShowFollowedOnlyChange(false)}
-            >
-              <span>Tous les flux</span>
-            </Button>
-            
-            <Button
-              variant={showFollowedOnly ? "default" : "outline"}
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={() => onShowFollowedOnlyChange(true)}
-            >
-              <Heart className="h-3 w-3" />
-              <span>Flux suivis uniquement</span>
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {onDateFilterChange && (
-        <div className="pt-4 border-t space-y-2">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filtrer par date</span>
-          </div>
-          
-          <div className="space-y-1">
-            <Button
-              variant={dateFilter === null ? "default" : "outline"}
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={() => onDateFilterChange(null)}
-            >
-              <span>Tous les articles</span>
-            </Button>
-            
-            <Button
-              variant={dateFilter === 'today' ? "default" : "outline"}
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={() => onDateFilterChange('today')}
-            >
-              <Clock className="h-3 w-3" />
-              <span>Aujourd'hui</span>
-            </Button>
-            
-            <Button
-              variant={dateFilter === 'yesterday' ? "default" : "outline"}
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={() => onDateFilterChange('yesterday')}
-            >
-              <Calendar className="h-3 w-3" />
-              <span>Hier</span>
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {user && (
+      {(onDateFilterChange || (user && onShowFollowedOnlyChange) || user) && (
         <div className="pt-4 border-t">
-          <div className="flex items-center gap-2">
-            <Pin className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Épinglé</span>
-            <Badge variant="secondary" className="ml-auto">
-              {pinnedCount > 0 ? `${pinnedCount}` : 'Aucun'}
-            </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Affichage (Tous / Suivis) */}
+            {user && onShowFollowedOnlyChange && (
+              <div className="flex items-center gap-2 mr-2">
+                <Heart className="h-4 w-4 text-muted-foreground" />
+                <Button
+                  variant={!showFollowedOnly ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => onShowFollowedOnlyChange(false)}
+                >
+                  Tous les flux
+                </Button>
+                <Button
+                  variant={showFollowedOnly ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => onShowFollowedOnlyChange(true)}
+                >
+                  <Heart className="h-3 w-3" />
+                  Flux suivis uniquement
+                </Button>
+              </div>
+            )}
+
+            {/* Date */}
+            {onDateFilterChange && (
+              <div className="flex items-center gap-2 mr-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Button
+                  variant={dateFilter === null ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => onDateFilterChange(null)}
+                >
+                  Tous les articles
+                </Button>
+                <Button
+                  variant={dateFilter === 'today' ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => onDateFilterChange('today')}
+                >
+                  <Clock className="h-3 w-3" />
+                  Aujourd'hui
+                </Button>
+                <Button
+                  variant={dateFilter === 'yesterday' ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => onDateFilterChange('yesterday')}
+                >
+                  <Calendar className="h-3 w-3" />
+                  Hier
+                </Button>
+              </div>
+            )}
+
+            {/* Épinglés (compteur) */}
+            {user && (
+              <div className="ml-auto flex items-center gap-2">
+                <Pin className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Épinglés</span>
+                <Badge variant="secondary">
+                  {pinnedCount > 0 ? `${pinnedCount}` : 'Aucun'}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
       )}
+
     </div>
   );
 };
