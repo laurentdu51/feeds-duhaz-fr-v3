@@ -103,82 +103,16 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           })) || [];
 
         setArticles(transformedArticles);
-      } else if (user) {
-        // For authenticated users, fetch articles from their followed feeds
-        const { data: userFeeds, error: userFeedsError } = await supabase
-          .from('user_feeds')
-          .select('feed_id')
-          .eq('user_id', user.id)
-          .eq('is_followed', true);
-
-        if (userFeedsError) {
-          console.error('❌ Error fetching user feeds:', userFeedsError);
-          toast.error('Erreur lors du chargement de vos flux');
-          return;
-        }
-
-        console.log('📋 User followed feeds:', userFeeds);
-        const followedFeedIds = userFeeds?.map(uf => uf.feed_id) || [];
-        
-        if (followedFeedIds.length === 0) {
-          console.log('⚠️ No followed feeds found for user');
-          // Si l'utilisateur ne suit aucun flux, on affiche les articles récents non lus
-          let query = supabase
-            .from('articles')
-            .select(`
-              *,
-              feeds!inner(name, category),
-              user_articles(is_read, is_pinned)
-            `);
-          
-          // Apply date filter if specified
-          if (dateStart && dateEnd) {
-            query = query.gte('published_at', dateStart).lte('published_at', dateEnd);
-          }
-          
-          const { data: recentArticles, error: recentError } = await query
-            .order('published_at', { ascending: false })
-            .limit(20);
-
-          if (recentError) {
-            console.error('❌ Error fetching recent articles:', recentError);
-            toast.error('Erreur lors du chargement des articles');
-            return;
-          }
-
-          console.log('📰 Recent articles for user with no followed feeds:', recentArticles?.length);
-          
-          // Transform to NewsItem format and filter out read articles
-          const transformedArticles: NewsItem[] = recentArticles
-            ?.filter(article => !article.user_articles[0]?.is_read) // Filter out read articles
-            ?.map(article => ({
-              id: article.id,
-              title: article.title,
-              description: article.description || '',
-              content: article.content || '',
-              source: article.feeds.name,
-              category: article.feeds.category as NewsItem['category'],
-              publishedAt: article.published_at,
-              readTime: article.read_time || 5,
-              isPinned: article.user_articles[0]?.is_pinned || false,
-              isRead: article.user_articles[0]?.is_read || false,
-              url: article.url || undefined,
-              imageUrl: article.image_url || undefined
-            })) || [];
-
-          setArticles(transformedArticles);
-          return;
-        }
-
-        // Fetch articles from followed feeds with user interactions, excluding read articles
+      } else {
+        // For users wanting all articles or visitors - show all articles from all feeds
+        console.log('👤 Loading all articles (visitor or showFollowedOnly=false)');
         let query = supabase
           .from('articles')
           .select(`
             *,
             feeds!inner(name, category),
             user_articles(is_read, is_pinned)
-          `)
-          .in('feed_id', followedFeedIds);
+          `);
         
         // Apply date filter if specified
         if (dateStart && dateEnd) {
@@ -190,62 +124,17 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           .limit(100);
 
         if (articlesError) {
-          console.error('❌ Error fetching articles:', articlesError);
+          console.error('❌ Error fetching all articles:', articlesError);
           toast.error('Erreur lors du chargement des articles');
           return;
         }
 
-        console.log('📰 Articles found for followed feeds:', articlesData?.length);
+        console.log('📰 All articles found:', articlesData?.length);
 
-        // Transform to NewsItem format and filter out read articles
-        const transformedArticles: NewsItem[] = articlesData
-          ?.filter(article => !article.user_articles[0]?.is_read) // Filter out read articles
-          ?.map(article => ({
-            id: article.id,
-            title: article.title,
-            description: article.description || '',
-            content: article.content || '',
-            source: article.feeds.name,
-            category: article.feeds.category as NewsItem['category'],
-            publishedAt: article.published_at,
-            readTime: article.read_time || 5,
-            isPinned: article.user_articles[0]?.is_pinned || false,
-            isRead: article.user_articles[0]?.is_read || false,
-            url: article.url || undefined,
-            imageUrl: article.image_url || undefined
-          })) || [];
-
-        setArticles(transformedArticles);
-      } else {
-        // For visitors or users wanting all articles, show recent articles from all feeds
-        console.log('👤 Loading articles for visitor or all articles');
-        let query = supabase
-          .from('articles')
-          .select(`
-            *,
-            feeds!inner(name, category)
-          `);
-        
-        // Apply date filter if specified
-        if (dateStart && dateEnd) {
-          query = query.gte('published_at', dateStart).lte('published_at', dateEnd);
-        }
-        
-        const { data: articlesData, error: articlesError } = await query
-          .order('published_at', { ascending: false })
-          .limit(50);
-
-        if (articlesError) {
-          console.error('❌ Error fetching public articles:', articlesError);
-          toast.error('Erreur lors du chargement des articles');
-          return;
-        }
-
-        console.log('📰 Public articles found:', articlesData?.length);
-
-        // Transform to NewsItem format - filter out articles without feeds
+        // Transform to NewsItem format
         const transformedArticles: NewsItem[] = articlesData
           ?.filter(article => article.feeds) // Only keep articles with valid feeds
+          ?.filter(article => user ? !article.user_articles[0]?.is_read : true) // Filter out read articles only for logged users
           ?.map(article => ({
             id: article.id,
             title: article.title,
@@ -255,8 +144,8 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
             category: article.feeds.category as NewsItem['category'],
             publishedAt: article.published_at,
             readTime: article.read_time || 5,
-            isPinned: false,
-            isRead: false,
+            isPinned: user ? (article.user_articles[0]?.is_pinned || false) : false,
+            isRead: user ? (article.user_articles[0]?.is_read || false) : false,
             url: article.url || undefined,
             imageUrl: article.image_url || undefined
           })) || [];
