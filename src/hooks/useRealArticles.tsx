@@ -134,7 +134,6 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
         // Transform to NewsItem format
         const transformedArticles: NewsItem[] = articlesData
           ?.filter(article => article.feeds) // Only keep articles with valid feeds
-          ?.filter(article => user ? !article.user_articles[0]?.is_read : true) // Filter out read articles only for logged users
           ?.map(article => ({
             id: article.id,
             title: article.title,
@@ -221,8 +220,12 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
         return;
       }
 
-      // Remove the article from the list instead of just marking it as read
-      setArticles(prev => prev.filter(item => item.id !== articleId));
+      // Update local state based on mode: remove in followed-only, keep in "all"
+      if (showFollowedOnly) {
+        setArticles(prev => prev.filter(item => item.id !== articleId));
+      } else {
+        setArticles(prev => prev.map(item => item.id === articleId ? { ...item, isRead: true } : item));
+      }
     } catch (error) {
       console.error('Error marking as read:', error);
     }
