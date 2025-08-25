@@ -98,20 +98,20 @@ const CategoryFilter = ({
       
       {(onDateFilterChange || (user && onShowFollowedOnlyChange) || user) && (
         <div className="pt-4 border-t space-y-3">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+          <div className="flex flex-wrap items-start gap-4">
             
             {/* Section 1: Filtres d'affichage */}
             {user && onShowFollowedOnlyChange && (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 min-w-fit">
                 <div className="flex items-center gap-2 mb-1">
                   <Heart className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-muted-foreground">Affichage</span>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant={!showFollowedOnly ? "default" : "outline"}
                     size="sm"
-                    className="justify-start gap-2"
+                    className="justify-start gap-2 whitespace-nowrap"
                     onClick={() => onShowFollowedOnlyChange(false)}
                   >
                     Tous les flux
@@ -119,7 +119,7 @@ const CategoryFilter = ({
                   <Button
                     variant={showFollowedOnly ? "default" : "outline"}
                     size="sm"
-                    className="justify-start gap-2"
+                    className="justify-start gap-2 whitespace-nowrap"
                     onClick={() => onShowFollowedOnlyChange(true)}
                   >
                     <Heart className="h-3 w-3" />
@@ -131,16 +131,16 @@ const CategoryFilter = ({
 
             {/* Section 2: Filtres de date */}
             {onDateFilterChange && (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 min-w-fit">
                 <div className="flex items-center gap-2 mb-1">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-muted-foreground">Période</span>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant={dateFilter === null ? "default" : "outline"}
                     size="sm"
-                    className="justify-start gap-2"
+                    className="justify-start gap-2 whitespace-nowrap"
                     onClick={() => onDateFilterChange(null)}
                   >
                     Tous les articles
@@ -148,7 +148,7 @@ const CategoryFilter = ({
                   <Button
                     variant={dateFilter === 'today' ? "default" : "outline"}
                     size="sm"
-                    className="justify-start gap-2"
+                    className="justify-start gap-2 whitespace-nowrap"
                     onClick={() => onDateFilterChange('today')}
                   >
                     <Clock className="h-3 w-3" />
@@ -157,7 +157,7 @@ const CategoryFilter = ({
                   <Button
                     variant={dateFilter === 'yesterday' ? "default" : "outline"}
                     size="sm"
-                    className="justify-start gap-2"
+                    className="justify-start gap-2 whitespace-nowrap"
                     onClick={() => onDateFilterChange('yesterday')}
                   >
                     <Calendar className="h-3 w-3" />
@@ -169,15 +169,12 @@ const CategoryFilter = ({
 
             {/* Section 3: Compteur d'épinglés */}
             {user && (
-              <div className={cn(
-                "flex flex-col gap-2",
-                "lg:items-end lg:justify-end lg:ml-auto"
-              )}>
-                <div className="flex items-center gap-2 mb-1 lg:justify-end">
+              <div className="flex flex-col gap-2 min-w-fit ml-auto">
+                <div className="flex items-center gap-2 mb-1 justify-end">
                   <Pin className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-muted-foreground">Épinglés</span>
                 </div>
-                <Badge variant="secondary" className="w-fit lg:ml-auto">
+                <Badge variant="secondary" className="w-fit ml-auto">
                   {pinnedCount > 0 ? `${pinnedCount}` : 'Aucun'}
                 </Badge>
               </div>
