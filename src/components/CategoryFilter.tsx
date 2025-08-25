@@ -169,12 +169,12 @@ const CategoryFilter = ({
 
             {/* Section 3: Compteur d'épinglés */}
             {user && (
-              <div className="flex flex-col gap-2 min-w-fit ml-auto">
-                <div className="flex items-center gap-2 mb-1 justify-end">
+              <div className="flex flex-col gap-2 min-w-fit">
+                <div className="flex items-center gap-2 mb-1">
                   <Pin className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-muted-foreground">Épinglés</span>
                 </div>
-                <Badge variant="secondary" className="w-fit ml-auto">
+                <Badge variant="secondary" className="w-fit">
                   {pinnedCount > 0 ? `${pinnedCount}` : 'Aucun'}
                 </Badge>
               </div>
