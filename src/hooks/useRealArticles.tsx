@@ -5,7 +5,7 @@ import { useAuth } from './useAuth';
 import { NewsItem } from '@/types/news';
 import { toast } from 'sonner';
 
-export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showFollowedOnly?: boolean) {
+export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showFollowedOnly?: boolean, showReadArticles?: boolean) {
   const [articles, setArticles] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -115,9 +115,9 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           unique: uniqueArticles.length
         });
 
-        // Transform to NewsItem format and filter out read articles
+        // Transform to NewsItem format and conditionally filter read articles
         const transformedArticles: NewsItem[] = uniqueArticles
-          ?.filter(article => !article.user_articles[0]?.is_read) // Filter out read articles
+          ?.filter(article => showReadArticles || !article.user_articles[0]?.is_read)
           ?.map(article => ({
             id: article.id,
             title: article.title,
@@ -202,9 +202,9 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           unique: uniqueArticles.length
         });
 
-        // Transform to NewsItem format
+        // Transform to NewsItem format and conditionally filter read articles
         const transformedArticles: NewsItem[] = uniqueArticles
-          ?.filter(article => article.feeds) // Only keep articles with valid feeds
+          ?.filter(article => article.feeds && (showReadArticles || !article.user_articles[0]?.is_read))
           ?.map(article => ({
             id: article.id,
             title: article.title,
@@ -291,11 +291,13 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
         return;
       }
 
-      // Update local state based on mode: remove in followed-only, keep in "all"
-      if (showFollowedOnly) {
+      // Update local state: remove if not showing read articles, otherwise mark as read
+      if (!showReadArticles) {
         setArticles(prev => prev.filter(item => item.id !== articleId));
+        toast.success("Article marqué comme lu");
       } else {
         setArticles(prev => prev.map(item => item.id === articleId ? { ...item, isRead: true } : item));
+        toast.success("Article marqué comme lu");
       }
     } catch (error) {
       console.error('Error marking as read:', error);
@@ -355,7 +357,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
 
   useEffect(() => {
     fetchArticles();
-  }, [user, dateFilter, showFollowedOnly]);
+  }, [user, dateFilter, showFollowedOnly, showReadArticles]);
 
   return {
     articles,

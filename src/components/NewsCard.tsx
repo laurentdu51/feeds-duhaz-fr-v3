@@ -59,9 +59,7 @@ const NewsCard = ({
 
   const handleCardClick = () => {
     onOpenArticle(news);
-    if (!news.isRead) {
-      onMarkAsRead(news.id);
-    }
+    // Don't automatically mark as read on card click - user can use the "Mark as read" button
   };
 
   return (

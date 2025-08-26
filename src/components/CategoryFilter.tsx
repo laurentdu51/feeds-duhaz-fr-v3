@@ -12,7 +12,8 @@ import {
   Pin,
   Calendar,
   Clock,
-  Heart
+  Heart,
+  Eye
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -27,6 +28,8 @@ interface CategoryFilterProps {
   onDateFilterChange?: (filter: 'today' | 'yesterday' | null) => void;
   showFollowedOnly?: boolean;
   onShowFollowedOnlyChange?: (showFollowedOnly: boolean) => void;
+  showReadArticles?: boolean;
+  onShowReadArticlesChange?: (showReadArticles: boolean) => void;
 }
 
 const iconMap = {
@@ -46,7 +49,9 @@ const CategoryFilter = ({
   dateFilter,
   onDateFilterChange,
   showFollowedOnly,
-  onShowFollowedOnlyChange
+  onShowFollowedOnlyChange,
+  showReadArticles,
+  onShowReadArticlesChange
 }: CategoryFilterProps) => {
   const { user } = useAuth();
 
@@ -124,6 +129,27 @@ const CategoryFilter = ({
                   >
                     <Heart className="h-3 w-3" />
                     Flux suivis uniquement
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Section 1b: Articles lus */}
+            {user && onShowReadArticlesChange && (
+              <div className="flex flex-col gap-2 min-w-fit">
+                <div className="flex items-center gap-2 mb-1">
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Articles lus</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={showReadArticles ? "default" : "outline"}
+                    size="sm"
+                    className="justify-start gap-2 whitespace-nowrap"
+                    onClick={() => onShowReadArticlesChange(!showReadArticles)}
+                  >
+                    <Eye className="h-3 w-3" />
+                    {showReadArticles ? 'Masquer les lus' : 'Afficher les lus'}
                   </Button>
                 </div>
               </div>

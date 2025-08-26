@@ -22,6 +22,7 @@ const Index = () => {
   } = useAuth();
   const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | null>(null);
   const [showFollowedOnly, setShowFollowedOnly] = useState(false);
+  const [showReadArticles, setShowReadArticles] = useState(false);
   const {
     articles,
     loading,
@@ -29,7 +30,7 @@ const Index = () => {
     markAsRead,
     deleteArticle,
     refetch
-  } = useRealArticles(dateFilter, showFollowedOnly);
+  } = useRealArticles(dateFilter, showFollowedOnly, showReadArticles);
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,7 +57,7 @@ const Index = () => {
     });
   }, [articles, selectedCategory, searchQuery]);
   const pinnedCount = articles.filter(item => item.isPinned).length;
-  const unreadCount = articles.length; // All displayed articles are unread now
+  const unreadCount = articles.filter(item => !item.isRead).length;
 
   // Update document title with unread count
   useEffect(() => {
@@ -130,19 +131,25 @@ const Index = () => {
                 newsCount={articles.length} 
                 pinnedCount={pinnedCount} 
                 articles={articles}
-                dateFilter={dateFilter}
-                onDateFilterChange={setDateFilter}
-                showFollowedOnly={showFollowedOnly}
-                onShowFollowedOnlyChange={setShowFollowedOnly}
+                          dateFilter={dateFilter}
+                          onDateFilterChange={setDateFilter}
+                          showFollowedOnly={showFollowedOnly}
+                          onShowFollowedOnlyChange={setShowFollowedOnly}
+                          showReadArticles={showReadArticles}
+                          onShowReadArticlesChange={setShowReadArticles}
               />
               
               <div className="bg-card border rounded-lg p-4 space-y-3">
                 <h3 className="font-semibold text-sm">Statistiques</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Articles non lus</span>
-                    <Badge variant="outline">{articles.length}</Badge>
-                  </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Articles non lus</span>
+                              <Badge variant="outline">{unreadCount}</Badge>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Articles totaux</span>
+                              <Badge variant="outline">{articles.length}</Badge>
+                            </div>
                   {user && <div className="flex justify-between">
                       <span className="text-muted-foreground">Épinglés</span>
                       <Badge variant="secondary">{pinnedCount}</Badge>
@@ -157,7 +164,7 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-bold">
-                  {user ? 'Articles non lus' : 'Derniers articles'}
+                  {showReadArticles ? 'Tous les articles' : (user ? 'Articles non lus' : 'Derniers articles')}
                 </h2>
                 
               </div>
@@ -185,6 +192,8 @@ const Index = () => {
                           onDateFilterChange={setDateFilter}
                           showFollowedOnly={showFollowedOnly}
                           onShowFollowedOnlyChange={setShowFollowedOnly}
+                          showReadArticles={showReadArticles}
+                          onShowReadArticlesChange={setShowReadArticles}
                         />
                         
                         <div className="bg-card border rounded-lg p-4 space-y-3">
@@ -192,6 +201,10 @@ const Index = () => {
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Articles non lus</span>
+                              <Badge variant="outline">{unreadCount}</Badge>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Articles totaux</span>
                               <Badge variant="outline">{articles.length}</Badge>
                             </div>
                             {user && <div className="flex justify-between">
