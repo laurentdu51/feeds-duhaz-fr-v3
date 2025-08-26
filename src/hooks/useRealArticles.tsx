@@ -57,8 +57,29 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           return;
         }
 
-        // Fetch articles from followed feeds with user interactions, excluding read articles
-        let query = supabase
+        // Fetch pinned articles first (without date filter)
+        const pinnedQuery = supabase
+          .from('articles')
+          .select(`
+            *,
+            feeds!inner(name, category),
+            user_articles!inner(is_read, is_pinned)
+          `)
+          .in('feed_id', followedFeedIds)
+          .eq('user_articles.user_id', user.id)
+          .eq('user_articles.is_pinned', true)
+          .eq('user_articles.is_read', false);
+
+        const { data: pinnedArticles, error: pinnedError } = await pinnedQuery
+          .order('published_at', { ascending: false })
+          .limit(50);
+
+        if (pinnedError) {
+          console.error('❌ Error fetching pinned articles:', pinnedError);
+        }
+
+        // Fetch regular articles (with date filter if specified)
+        let regularQuery = supabase
           .from('articles')
           .select(`
             *,
@@ -67,25 +88,35 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           `)
           .in('feed_id', followedFeedIds);
         
-        // Apply date filter if specified
+        // Apply date filter to regular articles only
         if (dateStart && dateEnd) {
-          query = query.gte('published_at', dateStart).lte('published_at', dateEnd);
+          regularQuery = regularQuery.gte('published_at', dateStart).lte('published_at', dateEnd);
         }
         
-        const { data: articlesData, error: articlesError } = await query
+        const { data: regularArticles, error: regularError } = await regularQuery
           .order('published_at', { ascending: false })
           .limit(100);
 
-        if (articlesError) {
-          console.error('❌ Error fetching articles:', articlesError);
+        if (regularError) {
+          console.error('❌ Error fetching regular articles:', regularError);
           toast.error('Erreur lors du chargement des articles');
           return;
         }
 
-        console.log('📰 Articles found for followed feeds:', articlesData?.length);
+        // Combine articles and remove duplicates
+        const allArticles = [...(pinnedArticles || []), ...(regularArticles || [])];
+        const uniqueArticles = allArticles.filter((article, index, self) => 
+          index === self.findIndex(a => a.id === article.id)
+        );
+
+        console.log('📰 Articles found:', {
+          pinned: pinnedArticles?.length || 0,
+          regular: regularArticles?.length || 0,
+          unique: uniqueArticles.length
+        });
 
         // Transform to NewsItem format and filter out read articles
-        const transformedArticles: NewsItem[] = articlesData
+        const transformedArticles: NewsItem[] = uniqueArticles
           ?.filter(article => !article.user_articles[0]?.is_read) // Filter out read articles
           ?.map(article => ({
             id: article.id,
@@ -106,7 +137,35 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
       } else {
         // For users wanting all articles or visitors - show all articles from all feeds
         console.log('👤 Loading all articles (visitor or showFollowedOnly=false)');
-        let query = supabase
+        
+        let pinnedArticles = [];
+        let regularArticles = [];
+
+        if (user) {
+          // Fetch pinned articles first (without date filter) for authenticated users
+          const pinnedQuery = supabase
+            .from('articles')
+            .select(`
+              *,
+              feeds!inner(name, category),
+              user_articles!inner(is_read, is_pinned)
+            `)
+            .eq('user_articles.user_id', user.id)
+            .eq('user_articles.is_pinned', true);
+
+          const { data: pinnedData, error: pinnedError } = await pinnedQuery
+            .order('published_at', { ascending: false })
+            .limit(50);
+
+          if (pinnedError) {
+            console.error('❌ Error fetching pinned articles:', pinnedError);
+          } else {
+            pinnedArticles = pinnedData || [];
+          }
+        }
+
+        // Fetch regular articles (with date filter if specified)
+        let regularQuery = supabase
           .from('articles')
           .select(`
             *,
@@ -114,25 +173,37 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
             user_articles(is_read, is_pinned)
           `);
         
-        // Apply date filter if specified
+        // Apply date filter to regular articles only
         if (dateStart && dateEnd) {
-          query = query.gte('published_at', dateStart).lte('published_at', dateEnd);
+          regularQuery = regularQuery.gte('published_at', dateStart).lte('published_at', dateEnd);
         }
         
-        const { data: articlesData, error: articlesError } = await query
+        const { data: regularData, error: regularError } = await regularQuery
           .order('published_at', { ascending: false })
           .limit(100);
 
-        if (articlesError) {
-          console.error('❌ Error fetching all articles:', articlesError);
+        if (regularError) {
+          console.error('❌ Error fetching regular articles:', regularError);
           toast.error('Erreur lors du chargement des articles');
           return;
         }
 
-        console.log('📰 All articles found:', articlesData?.length);
+        regularArticles = regularData || [];
+
+        // Combine articles and remove duplicates
+        const allArticles = [...pinnedArticles, ...regularArticles];
+        const uniqueArticles = allArticles.filter((article, index, self) => 
+          index === self.findIndex(a => a.id === article.id)
+        );
+
+        console.log('📰 All articles found:', {
+          pinned: pinnedArticles.length,
+          regular: regularArticles.length,
+          unique: uniqueArticles.length
+        });
 
         // Transform to NewsItem format
-        const transformedArticles: NewsItem[] = articlesData
+        const transformedArticles: NewsItem[] = uniqueArticles
           ?.filter(article => article.feeds) // Only keep articles with valid feeds
           ?.map(article => ({
             id: article.id,
