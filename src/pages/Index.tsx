@@ -23,6 +23,15 @@ const Index = () => {
   const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | null>(null);
   const [showFollowedOnly, setShowFollowedOnly] = useState(false);
   const [showReadArticles, setShowReadArticles] = useState(false);
+
+  // Reset date filter when switching to "All articles" mode
+  const handleShowFollowedOnlyChange = (value: boolean) => {
+    setShowFollowedOnly(value);
+    if (!value) {
+      // When switching to "All articles", reset date filter
+      setDateFilter(null);
+    }
+  };
   const {
     articles,
     loading,
@@ -134,7 +143,7 @@ const Index = () => {
                           dateFilter={dateFilter}
                           onDateFilterChange={setDateFilter}
                           showFollowedOnly={showFollowedOnly}
-                          onShowFollowedOnlyChange={setShowFollowedOnly}
+                          onShowFollowedOnlyChange={handleShowFollowedOnlyChange}
                           showReadArticles={showReadArticles}
                           onShowReadArticlesChange={setShowReadArticles}
               />
@@ -191,7 +200,7 @@ const Index = () => {
                           dateFilter={dateFilter}
                           onDateFilterChange={setDateFilter}
                           showFollowedOnly={showFollowedOnly}
-                          onShowFollowedOnlyChange={setShowFollowedOnly}
+                          onShowFollowedOnlyChange={handleShowFollowedOnlyChange}
                           showReadArticles={showReadArticles}
                           onShowReadArticlesChange={setShowReadArticles}
                         />

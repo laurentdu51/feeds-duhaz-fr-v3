@@ -155,8 +155,8 @@ const CategoryFilter = ({
               </div>
             )}
 
-            {/* Section 2: Filtres de date */}
-            {onDateFilterChange && (
+            {/* Section 2: Filtres de date - Only show for followed feeds */}
+            {onDateFilterChange && showFollowedOnly && (
               <div className="flex flex-col gap-2 min-w-fit">
                 <div className="flex items-center gap-2 mb-1">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -189,6 +189,15 @@ const CategoryFilter = ({
                     <Calendar className="h-3 w-3" />
                     Hier
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Info message when in "All articles" mode */}
+            {!showFollowedOnly && user && (
+              <div className="flex flex-col gap-2 min-w-fit">
+                <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md">
+                  Mode "Tous les flux" : affiche tous les articles sans filtre de date
                 </div>
               </div>
             )}

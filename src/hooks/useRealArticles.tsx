@@ -164,7 +164,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           }
         }
 
-        // Fetch regular articles (with date filter if specified)
+        // Fetch regular articles (NO date filter for "All articles" mode)
         let regularQuery = supabase
           .from('articles')
           .select(`
@@ -173,10 +173,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
             user_articles(is_read, is_pinned)
           `);
         
-        // Apply date filter to regular articles only
-        if (dateStart && dateEnd) {
-          regularQuery = regularQuery.gte('published_at', dateStart).lte('published_at', dateEnd);
-        }
+        // Don't apply date filter in "All articles" mode - show everything
         
         const { data: regularData, error: regularError } = await regularQuery
           .order('published_at', { ascending: false })
