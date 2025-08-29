@@ -199,9 +199,38 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           unique: uniqueArticles.length
         });
 
+        console.log('🔍 Before filtering - Articles details:', {
+          total: uniqueArticles.length,
+          withFeeds: uniqueArticles.filter(a => a.feeds).length,
+          withUserArticles: uniqueArticles.filter(a => a.user_articles && a.user_articles.length > 0).length,
+          readArticles: uniqueArticles.filter(a => a.user_articles?.[0]?.is_read).length,
+          showReadArticles,
+          sampleArticle: uniqueArticles[0] ? {
+            id: uniqueArticles[0].id,
+            title: uniqueArticles[0].title.substring(0, 50),
+            feeds: !!uniqueArticles[0].feeds,
+            userArticles: uniqueArticles[0].user_articles?.length || 0,
+            isRead: uniqueArticles[0].user_articles?.[0]?.is_read
+          } : null
+        });
+
         // Transform to NewsItem format and conditionally filter read articles
         const transformedArticles: NewsItem[] = uniqueArticles
-          ?.filter(article => article.feeds && (showReadArticles || !article.user_articles[0]?.is_read))
+          ?.filter(article => {
+            const hasFeeds = !!article.feeds;
+            const userArticle = article.user_articles?.[0];
+            const isRead = userArticle?.is_read || false;
+            const shouldShow = showReadArticles || !isRead;
+            
+            if (!hasFeeds) {
+              console.log('❌ Article filtered out - no feeds:', article.id);
+            }
+            if (!shouldShow) {
+              console.log('❌ Article filtered out - read filter:', article.id, { isRead, showReadArticles });
+            }
+            
+            return hasFeeds && shouldShow;
+          })
           ?.map(article => ({
             id: article.id,
             title: article.title,
@@ -215,7 +244,17 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
             isRead: user ? (article.user_articles[0]?.is_read || false) : false,
             url: article.url || undefined,
             imageUrl: article.image_url || undefined
-          })) || [];
+           })) || [];
+
+        console.log('✅ After filtering - Final articles:', {
+          transformedCount: transformedArticles.length,
+          sampleTransformed: transformedArticles[0] ? {
+            id: transformedArticles[0].id,
+            title: transformedArticles[0].title.substring(0, 50),
+            isRead: transformedArticles[0].isRead,
+            isPinned: transformedArticles[0].isPinned
+          } : null
+        });
 
         setArticles(transformedArticles);
       }
