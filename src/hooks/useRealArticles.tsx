@@ -79,14 +79,30 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
         }
 
         // Fetch regular articles (with date filter if specified)
-        let regularQuery = supabase
-          .from('articles')
-          .select(`
-            *,
-            feeds!inner(name, category),
-            user_articles(is_read, is_pinned)
-          `)
-          .in('feed_id', followedFeedIds);
+        let regularQuery;
+        
+        if (!showReadArticles) {
+          // Optimize: exclude read articles at SQL level
+          regularQuery = supabase
+            .from('articles')
+            .select(`
+              *,
+              feeds!inner(name, category),
+              user_articles!left(is_read, is_pinned)
+            `)
+            .in('feed_id', followedFeedIds)
+            .or(`user_articles.is.null,user_articles.is_read.eq.false`);
+        } else {
+          // Include all articles (read and unread)
+          regularQuery = supabase
+            .from('articles')
+            .select(`
+              *,
+              feeds!inner(name, category),
+              user_articles(is_read, is_pinned)
+            `)
+            .in('feed_id', followedFeedIds);
+        }
         
         // Apply date filter to regular articles only
         if (dateStart && dateEnd) {
@@ -109,15 +125,16 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
           index === self.findIndex(a => a.id === article.id)
         );
 
-        console.log('📰 Articles found:', {
+        console.log('📰 Articles found (SQL filtered for read articles):', {
           pinned: pinnedArticles?.length || 0,
           regular: regularArticles?.length || 0,
-          unique: uniqueArticles.length
+          unique: uniqueArticles.length,
+          showReadArticles,
+          sqlFiltered: !showReadArticles
         });
 
-        // Transform to NewsItem format and conditionally filter read articles
+        // Transform to NewsItem format (read articles already filtered at SQL level when showReadArticles=false)
         const transformedArticles: NewsItem[] = uniqueArticles
-          ?.filter(article => showReadArticles || !article.user_articles[0]?.is_read)
           ?.map(article => ({
             id: article.id,
             title: article.title,
