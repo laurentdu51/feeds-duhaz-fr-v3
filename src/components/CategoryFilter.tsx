@@ -13,9 +13,17 @@ import {
   Calendar,
   Clock,
   Heart,
-  Eye
+  Eye,
+  ChevronDown,
+  ChevronRight,
+  BookOpen,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { NewsItem } from '@/types/news';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState } from 'react';
 
 interface CategoryFilterProps {
   categories: NewsCategory[];
@@ -24,12 +32,16 @@ interface CategoryFilterProps {
   newsCount: number;
   pinnedCount?: number;
   articles: any[]; // Add articles to calculate counts per category
+  pinnedArticles?: NewsItem[]; // Pinned articles to display
   dateFilter?: 'today' | 'yesterday' | null;
   onDateFilterChange?: (filter: 'today' | 'yesterday' | null) => void;
   showFollowedOnly?: boolean;
   onShowFollowedOnlyChange?: (showFollowedOnly: boolean) => void;
   showReadArticles?: boolean;
   onShowReadArticlesChange?: (showReadArticles: boolean) => void;
+  onTogglePin?: (articleId: string) => void;
+  onMarkAsRead?: (articleId: string) => void;
+  onDeleteArticle?: (articleId: string) => void;
 }
 
 const iconMap = {
@@ -46,14 +58,19 @@ const CategoryFilter = ({
   newsCount,
   pinnedCount = 0,
   articles,
+  pinnedArticles = [],
   dateFilter,
   onDateFilterChange,
   showFollowedOnly,
   onShowFollowedOnlyChange,
   showReadArticles,
-  onShowReadArticlesChange
+  onShowReadArticlesChange,
+  onTogglePin,
+  onMarkAsRead,
+  onDeleteArticle
 }: CategoryFilterProps) => {
   const { user } = useAuth();
+  const [isPinnedExpanded, setIsPinnedExpanded] = useState(false);
 
   // Calculate count for each category
   const getCategoryCount = (categoryType: string) => {
@@ -202,16 +219,96 @@ const CategoryFilter = ({
               </div>
             )}
 
-            {/* Section 3: Compteur d'épinglés */}
+            {/* Section 3: Articles épinglés */}
             {user && (
-              <div className="flex flex-col gap-2 min-w-fit">
-                <div className="flex items-center gap-2 mb-1">
-                  <Pin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-muted-foreground">Épinglés</span>
-                </div>
-                <Badge variant="secondary" className="w-fit">
-                  {pinnedCount > 0 ? `${pinnedCount}` : 'Aucun'}
-                </Badge>
+              <div className="col-span-full">
+                <Collapsible open={isPinnedExpanded} onOpenChange={setIsPinnedExpanded}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between p-3">
+                      <div className="flex items-center gap-2">
+                        <Pin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Articles épinglés</span>
+                        <Badge variant="secondary">{pinnedCount}</Badge>
+                      </div>
+                      {isPinnedExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 mt-2">
+                    {pinnedArticles.length === 0 ? (
+                      <div className="text-center py-4 text-muted-foreground text-sm">
+                        Aucun article épinglé
+                      </div>
+                    ) : (
+                      <ScrollArea className="max-h-96">
+                        <div className="space-y-2 pr-2">
+                          {pinnedArticles.slice(0, 10).map((article) => (
+                            <div
+                              key={article.id}
+                              className="border rounded-lg p-3 bg-card hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex items-start gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-sm font-medium line-clamp-2 mb-1">
+                                    {article.title}
+                                  </h4>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span>{article.source}</span>
+                                    <span>•</span>
+                                    <span>{new Date(article.publishedAt).toLocaleDateString('fr-FR')}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {!article.isRead && onMarkAsRead && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => onMarkAsRead(article.id)}
+                                      title="Marquer comme lu"
+                                    >
+                                      <BookOpen className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                  {onTogglePin && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => onTogglePin(article.id)}
+                                      title="Désépingler"
+                                    >
+                                      <Pin className="h-3 w-3 fill-current" />
+                                    </Button>
+                                  )}
+                                  {onDeleteArticle && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                                      onClick={() => onDeleteArticle(article.id)}
+                                      title="Supprimer"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {pinnedArticles.length > 10 && (
+                            <div className="text-center py-2 text-xs text-muted-foreground">
+                              +{pinnedArticles.length - 10} articles supplémentaires
+                            </div>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             )}
             

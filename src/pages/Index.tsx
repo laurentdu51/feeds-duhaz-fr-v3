@@ -65,6 +65,15 @@ const Index = () => {
       return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
     });
   }, [articles, selectedCategory, searchQuery]);
+
+  // Separate pinned and regular articles
+  const pinnedArticles = useMemo(() => {
+    return filteredNews.filter(article => article.isPinned);
+  }, [filteredNews]);
+
+  const regularArticles = useMemo(() => {
+    return filteredNews.filter(article => !article.isPinned);
+  }, [filteredNews]);
   const pinnedCount = articles.filter(item => item.isPinned).length;
   const unreadCount = articles.filter(item => !item.isRead).length;
 
@@ -140,12 +149,16 @@ const Index = () => {
                 newsCount={articles.length} 
                 pinnedCount={pinnedCount} 
                 articles={articles}
-                          dateFilter={dateFilter}
-                          onDateFilterChange={setDateFilter}
-                          showFollowedOnly={showFollowedOnly}
-                          onShowFollowedOnlyChange={handleShowFollowedOnlyChange}
-                          showReadArticles={showReadArticles}
-                          onShowReadArticlesChange={setShowReadArticles}
+                pinnedArticles={pinnedArticles}
+                dateFilter={dateFilter}
+                onDateFilterChange={setDateFilter}
+                showFollowedOnly={showFollowedOnly}
+                onShowFollowedOnlyChange={handleShowFollowedOnlyChange}
+                showReadArticles={showReadArticles}
+                onShowReadArticlesChange={setShowReadArticles}
+                onTogglePin={togglePin}
+                onMarkAsRead={markAsRead}
+                onDeleteArticle={deleteArticle}
               />
               
               <div className="bg-card border rounded-lg p-4 space-y-3">
@@ -197,12 +210,16 @@ const Index = () => {
                           newsCount={articles.length} 
                           pinnedCount={pinnedCount} 
                           articles={articles}
+                          pinnedArticles={pinnedArticles}
                           dateFilter={dateFilter}
                           onDateFilterChange={setDateFilter}
                           showFollowedOnly={showFollowedOnly}
                           onShowFollowedOnlyChange={handleShowFollowedOnlyChange}
                           showReadArticles={showReadArticles}
                           onShowReadArticlesChange={setShowReadArticles}
+                          onTogglePin={togglePin}
+                          onMarkAsRead={markAsRead}
+                          onDeleteArticle={deleteArticle}
                         />
                         
                         <div className="bg-card border rounded-lg p-4 space-y-3">
@@ -242,17 +259,27 @@ const Index = () => {
               </div>
             </div>
             
-            {filteredNews.length === 0 && articles.length > 0 ? <div className="text-center py-12">
+            {regularArticles.length === 0 && articles.length > 0 ? <div className="text-center py-12">
                 <p className="text-muted-foreground text-lg">Aucun article trouvé avec ces filtres</p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Essayez de modifier vos filtres ou votre recherche
                 </p>
-              </div> : filteredNews.length === 0 ? <div className="text-center py-12">
+                {pinnedArticles.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    ({pinnedArticles.length} article{pinnedArticles.length > 1 ? 's' : ''} épinglé{pinnedArticles.length > 1 ? 's' : ''} dans la sidebar)
+                  </p>
+                )}
+              </div> : regularArticles.length === 0 ? <div className="text-center py-12">
                 <Rss className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground text-lg">Aucun article non lu disponible</p>
                 <p className="text-sm text-muted-foreground mt-2 mb-4">
                   {user ? 'Bravo ! Tous vos articles sont lus ou suivez des flux RSS pour voir des articles ici' : 'Aucun article public disponible pour le moment'}
                 </p>
+                {pinnedArticles.length > 0 && (
+                  <p className="text-xs text-muted-foreground mb-4">
+                    ({pinnedArticles.length} article{pinnedArticles.length > 1 ? 's' : ''} épinglé{pinnedArticles.length > 1 ? 's' : ''} dans la sidebar)
+                  </p>
+                )}
                 {user && <div className="flex gap-2 justify-center">
                     <Link to="/feeds">
                       <Button variant="outline">
@@ -265,7 +292,7 @@ const Index = () => {
                     </Button>
                   </div>}
               </div> : <div className="space-y-4">
-                {filteredNews.map(item => <NewsCard key={item.id} news={item} onTogglePin={togglePin} onMarkAsRead={markAsRead} onDelete={deleteArticle} onOpenArticle={handleOpenArticle} />)}
+                {regularArticles.map(item => <NewsCard key={item.id} news={item} onTogglePin={togglePin} onMarkAsRead={markAsRead} onDelete={deleteArticle} onOpenArticle={handleOpenArticle} />)}
               </div>}
           </div>
         </div>
