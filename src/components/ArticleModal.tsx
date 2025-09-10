@@ -88,8 +88,8 @@ const ArticleModal = ({ isOpen, onClose, article }: ArticleModalProps) => {
             </div>
           )}
 
-          {/* Article Image */}
-          {article.imageUrl && !isYouTubeVideo && (
+          {/* Article Image - Only for non-YouTube articles */}
+          {article.imageUrl && article.category !== 'youtube' && (
             <div className="w-full">
               <img 
                 src={article.imageUrl} 
