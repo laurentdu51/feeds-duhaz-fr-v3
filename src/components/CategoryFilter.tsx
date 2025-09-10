@@ -23,6 +23,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { NewsItem } from '@/types/news';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useState } from 'react';
 
 interface CategoryFilterProps {
@@ -42,6 +53,7 @@ interface CategoryFilterProps {
   onTogglePin?: (articleId: string) => void;
   onMarkAsRead?: (articleId: string) => void;
   onDeleteArticle?: (articleId: string) => void;
+  onOpenArticle?: (article: NewsItem) => void;
 }
 
 const iconMap = {
@@ -67,10 +79,11 @@ const CategoryFilter = ({
   onShowReadArticlesChange,
   onTogglePin,
   onMarkAsRead,
-  onDeleteArticle
+  onDeleteArticle,
+  onOpenArticle
 }: CategoryFilterProps) => {
   const { user } = useAuth();
-  const [isPinnedExpanded, setIsPinnedExpanded] = useState(false);
+  const [isPinnedExpanded, setIsPinnedExpanded] = useState(true);
 
   // Calculate count for each category
   const getCategoryCount = (categoryType: string) => {
@@ -251,8 +264,11 @@ const CategoryFilter = ({
                               className="border rounded-lg p-3 bg-card hover:bg-muted/50 transition-colors"
                             >
                               <div className="flex items-start gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="text-sm font-medium line-clamp-2 mb-1">
+                                <div 
+                                  className="flex-1 min-w-0 cursor-pointer"
+                                  onClick={() => onOpenArticle?.(article)}
+                                >
+                                  <h4 className="text-sm font-medium line-clamp-2 mb-1 hover:text-primary transition-colors">
                                     {article.title}
                                   </h4>
                                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -263,26 +279,60 @@ const CategoryFilter = ({
                                 </div>
                                 <div className="flex items-center gap-1">
                                   {!article.isRead && onMarkAsRead && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-7 w-7 p-0"
-                                      onClick={() => onMarkAsRead(article.id)}
-                                      title="Marquer comme lu"
-                                    >
-                                      <BookOpen className="h-3 w-3" />
-                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0"
+                                          title="Marquer comme lu"
+                                        >
+                                          <BookOpen className="h-3 w-3" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Marquer comme lu</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Êtes-vous sûr de vouloir marquer cet article comme lu ?
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => onMarkAsRead(article.id)}>
+                                            Marquer comme lu
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
                                   )}
                                   {onTogglePin && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-7 w-7 p-0"
-                                      onClick={() => onTogglePin(article.id)}
-                                      title="Désépingler"
-                                    >
-                                      <Pin className="h-3 w-3 fill-current" />
-                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0"
+                                          title="Désépingler"
+                                        >
+                                          <Pin className="h-3 w-3 fill-current" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Désépingler l'article</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Êtes-vous sûr de vouloir désépingler cet article ?
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => onTogglePin(article.id)}>
+                                            Désépingler
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
                                   )}
                                   {onDeleteArticle && (
                                     <Button

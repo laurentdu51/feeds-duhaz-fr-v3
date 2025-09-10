@@ -159,6 +159,7 @@ const Index = () => {
                 onTogglePin={togglePin}
                 onMarkAsRead={markAsRead}
                 onDeleteArticle={deleteArticle}
+                onOpenArticle={handleOpenArticle}
               />
               
               <div className="bg-card border rounded-lg p-4 space-y-3">
@@ -220,6 +221,7 @@ const Index = () => {
                           onTogglePin={togglePin}
                           onMarkAsRead={markAsRead}
                           onDeleteArticle={deleteArticle}
+                          onOpenArticle={handleOpenArticle}
                         />
                         
                         <div className="bg-card border rounded-lg p-4 space-y-3">
