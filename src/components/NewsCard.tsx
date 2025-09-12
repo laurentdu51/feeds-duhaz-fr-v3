@@ -109,22 +109,8 @@ const NewsCard = ({
       
       <CardContent className="space-y-4" onClick={handleCardClick}>
         <div className="space-y-3">
-          {news.category === 'youtube' && news.url ? (
-            // Pour YouTube, afficher la miniature en pleine largeur
-            <div className="w-full">
-              <img
-                src={getYouTubeThumbnail(news.url) || news.imageUrl}
-                alt={news.title}
-                className="w-full h-48 object-cover rounded-md"
-                onError={(e) => {
-                  // Fallback vers l'image normale ou une image par défaut
-                  if (news.imageUrl) {
-                    e.currentTarget.src = news.imageUrl;
-                  }
-                }}
-              />
-            </div>
-          ) : news.imageUrl ? (
+          {/* Show image only for non-YouTube articles */}
+          {news.imageUrl && news.category !== 'youtube' && (
             <div className="w-full">
               <img
                 src={news.imageUrl}
@@ -132,7 +118,7 @@ const NewsCard = ({
                 className="w-full h-48 object-cover rounded-md"
               />
             </div>
-          ) : null}
+          )}
           
           {news.category !== 'youtube' && (
             <div className="space-y-4">

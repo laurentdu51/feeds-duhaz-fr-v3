@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,9 +35,21 @@ const ArticleModal = ({ isOpen, onClose, article }: ArticleModalProps) => {
   };
 
   const getYouTubeVideoId = (url: string) => {
-    const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/v\/([^&\n?#]+)/,
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        console.log('YouTube video ID extracted:', match[1]);
+        return match[1];
+      }
+    }
+    console.log('No YouTube video ID found in URL:', url);
+    return null;
   };
 
   const isYouTubeVideo = article.category === 'youtube' && article.url;
@@ -59,6 +72,10 @@ const ArticleModal = ({ isOpen, onClose, article }: ArticleModalProps) => {
           <DialogTitle className="text-xl font-bold leading-tight text-left">
             {article.title}
           </DialogTitle>
+          
+          <DialogDescription className="sr-only">
+            Article détaillé: {article.description}
+          </DialogDescription>
           
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
