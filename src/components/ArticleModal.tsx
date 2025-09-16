@@ -9,10 +9,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { NewsItem } from '@/types/news';
+import { toast } from 'sonner';
 import { 
   Clock, 
   ExternalLink,
-  Calendar
+  Calendar,
+  Copy
 } from 'lucide-react';
 
 interface ArticleModalProps {
@@ -132,7 +134,22 @@ const ArticleModal = ({ isOpen, onClose, article }: ArticleModalProps) => {
 
           {/* External Link Button */}
           {article.url && (
-            <div className="flex justify-end pt-4 border-t">
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(article.url!);
+                    toast.success("Lien copié dans le presse-papier");
+                  } catch (error) {
+                    toast.error("Erreur lors de la copie du lien");
+                  }
+                }}
+              >
+                <Copy className="h-4 w-4" />
+                Copier le lien
+              </Button>
               <Button 
                 variant="outline" 
                 className="gap-2" 
