@@ -84,9 +84,6 @@ const NewsCard = ({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 space-y-2" onClick={handleCardClick}>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className={getSourceColor(news.category)}>
-                {news.source}
-              </Badge>
             </div>
             
             <h3 className={cn(
@@ -141,8 +138,10 @@ const NewsCard = ({
         </div>
         
         <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            {getCategoryIcon(news.category)}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline" className={getSourceColor(news.category)}>
+              {news.source}
+            </Badge>
             <span>
               {new Date(news.publishedAt).toLocaleDateString('fr-FR', {
                 day: 'numeric',
