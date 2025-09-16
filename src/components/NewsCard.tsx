@@ -87,9 +87,10 @@ const NewsCard = ({
             </div>
             
             <h3 className={cn(
-              "font-semibold leading-tight group-hover:text-primary transition-colors",
+              "flex items-center gap-2 font-semibold leading-tight group-hover:text-primary transition-colors",
               news.isRead && "text-muted-foreground"
             )}>
+              {getCategoryIcon(news.category)}
               {decodeHtmlEntities(news.title)}
             </h3>
           </div>
