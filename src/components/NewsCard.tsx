@@ -3,9 +3,10 @@ import { NewsItem } from '@/types/news';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Pin, ExternalLink, Eye, Trash2 } from 'lucide-react';
+import { Clock, Pin, ExternalLink, Eye, Trash2, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface NewsCardProps {
   news: NewsItem;
@@ -156,18 +157,38 @@ const NewsCard = ({
             )}
             
             {news.url && (
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(news.url, '_blank');
-                }}
-              >
-                <ExternalLink className="h-3 w-3" />
-                Lire
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    try {
+                      await navigator.clipboard.writeText(news.url!);
+                      toast.success("Lien copié dans le presse-papier");
+                    } catch (error) {
+                      toast.error("Erreur lors de la copie du lien");
+                    }
+                  }}
+                >
+                  <Copy className="h-3 w-3" />
+                  Copier
+                </Button>
+                
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="gap-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(news.url, '_blank');
+                  }}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Lire
+                </Button>
+              </>
             )}
           </div>
         </div>
