@@ -3,7 +3,7 @@ import { NewsItem } from '@/types/news';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Pin, ExternalLink, Eye, Trash2, Copy } from 'lucide-react';
+import { Clock, Pin, ExternalLink, Eye, Trash2, Copy, Rss, Youtube, Gamepad2, Newspaper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -30,6 +30,16 @@ const NewsCard = ({
     const textarea = document.createElement('textarea');
     textarea.innerHTML = text;
     return textarea.value;
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'rss': return <Rss className="h-4 w-4 text-blue-600" />;
+      case 'youtube': return <Youtube className="h-4 w-4 text-red-600" />;
+      case 'steam': return <Gamepad2 className="h-4 w-4 text-gray-600" />;
+      case 'actualites': return <Newspaper className="h-4 w-4 text-green-600" />;
+      default: return <Rss className="h-4 w-4 text-muted-foreground" />;
+    }
   };
 
   const getSourceColor = (category: string) => {
@@ -80,9 +90,10 @@ const NewsCard = ({
             </div>
             
             <h3 className={cn(
-              "font-semibold leading-tight group-hover:text-primary transition-colors",
+              "flex items-center gap-2 font-semibold leading-tight group-hover:text-primary transition-colors",
               news.isRead && "text-muted-foreground"
             )}>
+              {getCategoryIcon(news.category)}
               {decodeHtmlEntities(news.title)}
             </h3>
           </div>
