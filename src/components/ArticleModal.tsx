@@ -14,7 +14,11 @@ import {
   Clock, 
   ExternalLink,
   Calendar,
-  Copy
+  Copy,
+  Rss,
+  Youtube,
+  Gamepad2,
+  Newspaper
 } from 'lucide-react';
 
 interface ArticleModalProps {
@@ -25,6 +29,16 @@ interface ArticleModalProps {
 
 const ArticleModal = ({ isOpen, onClose, article }: ArticleModalProps) => {
   if (!article) return null;
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'rss': return <Rss className="h-5 w-5 text-blue-600" />;
+      case 'youtube': return <Youtube className="h-5 w-5 text-red-600" />;
+      case 'steam': return <Gamepad2 className="h-5 w-5 text-gray-600" />;
+      case 'actualites': return <Newspaper className="h-5 w-5 text-green-600" />;
+      default: return <Rss className="h-5 w-5 text-muted-foreground" />;
+    }
+  };
 
   const getSourceColor = (category: string) => {
     switch (category) {
@@ -71,7 +85,8 @@ const ArticleModal = ({ isOpen, onClose, article }: ArticleModalProps) => {
             </div>
           </div>
           
-          <DialogTitle className="text-xl font-bold leading-tight text-left">
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold leading-tight text-left">
+            {getCategoryIcon(article.category)}
             {article.title}
           </DialogTitle>
           
