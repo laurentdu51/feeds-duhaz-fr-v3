@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Settings, User, Rss, List, LogOut, Shield } from 'lucide-react';
+import { Search, Plus, Settings, User, Rss, List, LogOut, Shield, Pin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSuperUser } from '@/hooks/useSuperUser';
@@ -51,6 +51,18 @@ const Header = ({
             </div>
             
             {user ? <>
+                <Link to="/pinned">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Pin className="h-4 w-4" />
+                    Épinglés
+                    {pinnedCount > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                        {pinnedCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+                
                 <Link to="/feeds">
                   <Button variant="outline" size="sm" className="gap-2">
                     <List className="h-4 w-4" />
