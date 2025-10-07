@@ -12,6 +12,7 @@ export interface NewsItem {
   isRead: boolean;
   url?: string;
   imageUrl?: string;
+  feedId?: string;
 }
 
 export interface NewsCategory {

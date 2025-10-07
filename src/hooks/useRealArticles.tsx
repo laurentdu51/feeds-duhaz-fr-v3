@@ -147,7 +147,8 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
             isPinned: article.user_articles[0]?.is_pinned || false,
             isRead: article.user_articles[0]?.is_read || false,
             url: article.url || undefined,
-            imageUrl: article.image_url || undefined
+            imageUrl: article.image_url || undefined,
+            feedId: article.feed_id
           })) || [];
 
         setArticles(transformedArticles);
@@ -260,7 +261,8 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
             isPinned: user ? (article.user_articles[0]?.is_pinned || false) : false,
             isRead: user ? (article.user_articles[0]?.is_read || false) : false,
             url: article.url || undefined,
-            imageUrl: article.image_url || undefined
+            imageUrl: article.image_url || undefined,
+            feedId: article.feed_id
            })) || [];
 
         console.log('✅ After filtering - Final articles:', {

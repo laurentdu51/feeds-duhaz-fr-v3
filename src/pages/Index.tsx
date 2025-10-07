@@ -15,11 +15,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { RefreshCw, Filter, User, Rss, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 const Index = () => {
   const {
     user
   } = useAuth();
+  const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | null>(null);
   const [showFollowedOnly, setShowFollowedOnly] = useState(false);
   const [showReadArticles, setShowReadArticles] = useState(false);
@@ -101,6 +102,10 @@ const Index = () => {
   const handleCloseArticleModal = () => {
     setIsArticleModalOpen(false);
     setSelectedArticle(null);
+  };
+
+  const handleSourceClick = (feedId: string, feedName: string) => {
+    navigate(`/feed/${feedId}`);
   };
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
@@ -294,7 +299,7 @@ const Index = () => {
                     </Button>
                   </div>}
               </div> : <div className="space-y-4">
-                {regularArticles.map(item => <NewsCard key={item.id} news={item} onTogglePin={togglePin} onMarkAsRead={markAsRead} onDelete={deleteArticle} onOpenArticle={handleOpenArticle} />)}
+                {regularArticles.map(item => <NewsCard key={item.id} news={item} onTogglePin={togglePin} onMarkAsRead={markAsRead} onDelete={deleteArticle} onOpenArticle={handleOpenArticle} onSourceClick={handleSourceClick} />)}
               </div>}
           </div>
         </div>

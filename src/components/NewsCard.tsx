@@ -12,13 +12,15 @@ interface NewsCardProps {
   onMarkAsRead: (id: string) => void;
   onDelete: (id: string) => void;
   onOpenArticle: (article: NewsItem) => void;
+  onSourceClick?: (feedId: string, feedName: string) => void;
 }
 const NewsCard = ({
   news,
   onTogglePin,
   onMarkAsRead,
   onDelete,
-  onOpenArticle
+  onOpenArticle,
+  onSourceClick
 }: NewsCardProps) => {
   const {
     user
@@ -111,7 +113,19 @@ const NewsCard = ({
         
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant="outline" className={getSourceColor(news.category)}>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                getSourceColor(news.category),
+                onSourceClick && news.feedId && "cursor-pointer hover:opacity-80 transition-opacity"
+              )}
+              onClick={(e) => {
+                if (onSourceClick && news.feedId) {
+                  e.stopPropagation();
+                  onSourceClick(news.feedId, news.source);
+                }
+              }}
+            >
               {news.source}
             </Badge>
             <span>
