@@ -116,7 +116,7 @@ const Index = () => {
       </div>;
   }
   return <div className="min-h-screen bg-background">
-      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} pinnedCount={pinnedCount} onAddFeedClick={() => setIsAddFeedModalOpen(true)} />
+      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} pinnedCount={pinnedCount} />
       
       <main className="container mx-auto px-4 py-6">
         {/* Message pour les utilisateurs non connectés */}

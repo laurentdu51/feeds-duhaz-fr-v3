@@ -9,13 +9,11 @@ interface HeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   pinnedCount: number;
-  onAddFeedClick: () => void;
 }
 const Header = ({
   searchQuery,
   onSearchChange,
-  pinnedCount,
-  onAddFeedClick
+  pinnedCount
 }: HeaderProps) => {
   const {
     user,
@@ -69,11 +67,6 @@ const Header = ({
                     Gérer les flux
                   </Button>
                 </Link>
-                
-                <Button variant="outline" size="sm" className="gap-2" onClick={onAddFeedClick}>
-                  <Plus className="h-4 w-4" />
-                  Ajouter un Flux
-                </Button>
                 
                 <Button variant="ghost" size="sm">
                   <Settings className="h-4 w-4" />
