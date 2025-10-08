@@ -72,7 +72,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
 
         const { data: pinnedArticles, error: pinnedError } = await pinnedQuery
           .order('published_at', { ascending: false })
-          .limit(50);
+          .limit(100);
 
         if (pinnedError) {
           console.error('❌ Error fetching pinned articles:', pinnedError);
@@ -111,7 +111,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
         
         const { data: regularArticles, error: regularError } = await regularQuery
           .order('published_at', { ascending: false })
-          .limit(100);
+          .limit(200);
 
         if (regularError) {
           console.error('❌ Error fetching regular articles:', regularError);
@@ -151,7 +151,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
             feedId: article.feed_id
           })) || [];
 
-        setArticles(transformedArticles);
+        setArticles(transformedArticles.slice(0, 100));
       } else {
         // For users wanting all articles or visitors - show all articles from all feeds
         console.log('👤 Loading all articles (visitor or showFollowedOnly=false)');
@@ -173,7 +173,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
 
           const { data: pinnedData, error: pinnedError } = await pinnedQuery
             .order('published_at', { ascending: false })
-            .limit(50);
+            .limit(100);
 
           if (pinnedError) {
             console.error('❌ Error fetching pinned articles:', pinnedError);
@@ -195,7 +195,7 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
         
         const { data: regularData, error: regularError } = await regularQuery
           .order('published_at', { ascending: false })
-          .limit(100);
+          .limit(200);
 
         if (regularError) {
           console.error('❌ Error fetching regular articles:', regularError);
@@ -272,10 +272,10 @@ export function useRealArticles(dateFilter?: 'today' | 'yesterday' | null, showF
             title: transformedArticles[0].title.substring(0, 50),
             isRead: transformedArticles[0].isRead,
             isPinned: transformedArticles[0].isPinned
-          } : null
+           } : null
         });
 
-        setArticles(transformedArticles);
+        setArticles(transformedArticles.slice(0, 100));
       }
     } catch (error) {
       console.error('💥 Error in fetchArticles:', error);

@@ -4,7 +4,8 @@ import { useAuth } from './useAuth';
 import { NewsItem } from '@/types/news';
 import { toast } from 'sonner';
 
-const ARTICLES_PER_PAGE = 20;
+const ARTICLES_PER_PAGE = 100;
+const FETCH_LIMIT = 200;
 
 interface FeedInfo {
   name: string;
@@ -52,7 +53,10 @@ export function useFeedArticles(feedId: string, page: number = 1) {
       const from = (page - 1) * ARTICLES_PER_PAGE;
       const to = from + ARTICLES_PER_PAGE - 1;
 
-      // Fetch articles with pagination
+      // Fetch articles with pagination - fetch more than displayed
+      const fetchFrom = (page - 1) * FETCH_LIMIT;
+      const fetchTo = fetchFrom + FETCH_LIMIT - 1;
+      
       let query = supabase
         .from('articles')
         .select(`
@@ -62,7 +66,7 @@ export function useFeedArticles(feedId: string, page: number = 1) {
         `)
         .eq('feed_id', feedId)
         .order('published_at', { ascending: false })
-        .range(from, to);
+        .range(fetchFrom, fetchTo);
 
       const { data: articlesData, error: articlesError } = await query;
 
@@ -92,7 +96,7 @@ export function useFeedArticles(feedId: string, page: number = 1) {
           feedId: article.feed_id
         })) || [];
 
-      setArticles(transformedArticles);
+      setArticles(transformedArticles.slice(0, ARTICLES_PER_PAGE));
     } catch (error) {
       console.error('💥 Error in fetchFeedArticles:', error);
       toast.error('Erreur lors du chargement des articles');
