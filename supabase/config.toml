@@ -1,1 +1,7 @@
 project_id = "wftyukugedtojizgatwj"
+
+[functions.purge-articles]
+verify_jwt = false
+
+[functions.send-purge-report]
+verify_jwt = false

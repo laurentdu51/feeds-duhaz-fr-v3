@@ -235,11 +235,11 @@ serve(async (req) => {
       }
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in fetch-rss function:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error?.message || 'Unknown error',
         success: false 
       }),
       { 
