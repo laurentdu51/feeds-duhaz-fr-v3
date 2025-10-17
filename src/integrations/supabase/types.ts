@@ -141,6 +141,7 @@ export type Database = {
           is_pinned: boolean
           is_read: boolean
           read_at: string | null
+          read_count: number
           user_id: string
         }
         Insert: {
@@ -150,6 +151,7 @@ export type Database = {
           is_pinned?: boolean
           is_read?: boolean
           read_at?: string | null
+          read_count?: number
           user_id: string
         }
         Update: {
@@ -159,6 +161,7 @@ export type Database = {
           is_pinned?: boolean
           is_read?: boolean
           read_at?: string | null
+          read_count?: number
           user_id?: string
         }
         Relationships: [
@@ -211,6 +214,13 @@ export type Database = {
       is_super_user: {
         Args: { user_email?: string }
         Returns: boolean
+      }
+      purge_old_articles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          admin_emails: string[]
+          deleted_count: number
+        }[]
       }
     }
     Enums: {
