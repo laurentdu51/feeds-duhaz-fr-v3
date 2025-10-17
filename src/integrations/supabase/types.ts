@@ -222,6 +222,15 @@ export type Database = {
           deleted_count: number
         }[]
       }
+      test_purge_articles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          articles_to_delete: number
+          newest_article_date: string
+          oldest_article_date: string
+          sample_titles: string[]
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
