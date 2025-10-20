@@ -1,3 +1,10 @@
+/**
+ * Purge Articles Edge Function
+ * Version: 2.0
+ * Last updated: 2025-01-20
+ * Purpose: Automatically purge old articles and send email reports to admins
+ */
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -7,13 +14,16 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('🚀 Purge-articles function invoked at', new Date().toISOString());
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('📝 CORS preflight request handled');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting automatic article purge...');
+    console.log('🗑️ Starting automatic article purge...');
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

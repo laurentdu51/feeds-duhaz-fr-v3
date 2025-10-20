@@ -1,3 +1,10 @@
+/**
+ * Send Purge Report Edge Function
+ * Version: 2.0
+ * Last updated: 2025-01-20
+ * Purpose: Send email reports about article purge operations to admin users
+ */
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -15,17 +22,20 @@ interface PurgeReportRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('📧 Send-purge-report function invoked at', new Date().toISOString());
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log('📝 CORS preflight request handled');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { deletedCount, adminEmails, timestamp }: PurgeReportRequest = await req.json();
 
-    console.log('Sending purge report email...');
-    console.log('Deleted count:', deletedCount);
-    console.log('Admin emails:', adminEmails);
+    console.log('📨 Preparing to send purge report email...');
+    console.log(`📊 Report details: ${deletedCount} articles deleted, ${adminEmails?.length || 0} admins to notify`);
+    console.log('📧 Admin emails:', adminEmails);
 
     const emailDate = new Date(timestamp);
     const formattedDate = emailDate.toLocaleDateString('fr-FR', {
