@@ -2,8 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/dbb58bd7-9d5e-4915-8a2f-01904f2a0f89
-
+**URL**: (https://feeds.duhaz.fr)
 ## How can I edit this code?
 
 There are several ways of editing your application.
